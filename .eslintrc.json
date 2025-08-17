@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "import/resolver": {
+      "node": true, // mantém o resolver tradicional
+      "exports": true // faz o ESLint ler package.json#exports
+    }
+  }
+}
