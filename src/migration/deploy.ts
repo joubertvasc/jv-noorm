@@ -1,6 +1,6 @@
 import { MigrationHandler } from './MigrationHandler';
 
-export const migration = async () => {
+export const deploy = async () => {
   try {
     await MigrationHandler.verify();
     process.exit(0);
@@ -10,5 +10,5 @@ export const migration = async () => {
 };
 
 setTimeout(async () => {
-  await migration();
+  await deploy();
 }, 500);
