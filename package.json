@@ -16,7 +16,8 @@
     "watch": "tsc --watch",
     "debug": "ts-node-dev ./src/example/index.ts",
     "migration": "ts-node-dev ./src/migration/newMigration.ts",
-    "deploy": "ts-node-dev ./src/migration/deploy.ts"
+    "deploy": "ts-node-dev ./src/migration/deploy.ts",
+    "generate": "ts-node-dev ./src/generate/generate.ts"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
