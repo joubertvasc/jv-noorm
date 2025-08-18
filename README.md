@@ -1,12 +1,12 @@
 # No-ORM
 
-Free yourself from ORM's and code your own queries for MariaDB or PostgreSQL easyly and make your applications faster than ever
+Free yourself from ORM's and code your own queries for MariaDB or PostgreSQL easily and make your applications faster than ever
 
 ## Features
 
 - You are again in control of the database and it's performance;
 - Abstract between MariaDB or PostgreSQL databases. Noorm uses mysql2 and pg libs directly, without too many ORMs overheads;
-- Easyly control transactions;
+- Easily control transactions;
 - Create and control your own migrations with scripts write by yourself;
 - Deploy the migrations when and how you want or need.
 
