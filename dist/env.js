@@ -10,6 +10,7 @@ const env = {
     DB_HOST: getEnv('DB_HOST', 'localhost'),
     DB_PORT: getNumberEnv('DB_PORT', 3306),
     DB_DATABASE: getEnv('DB_DATABASE', undefined),
+    DB_SCHEMA: getEnv('DB_SCHEMA', null),
     DB_USER: getEnv('DB_USER', undefined),
     DB_PASSWORD: getEnv('DB_PASSWORD', undefined),
     DB_MAX_POOL: getNumberEnv('DB_MAX_POOL', 10),

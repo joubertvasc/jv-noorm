@@ -1,1 +1,1 @@
-export declare const migration: () => Promise<void>;
+export declare const deploy: () => Promise<void>;

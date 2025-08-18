@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const pool_1 = require("./pool");
-const date_fns_1 = require("date-fns");
 const env_1 = require("../../env");
 const db_error_1 = require("../../shared/errors/db-error");
 const BaseDB_1 = require("../BaseDB");
@@ -46,9 +45,7 @@ class MariaDB extends BaseDB_1.BaseDB {
         try {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
-            if (env_1.env.DB_VERBOSE) {
-                console.log(`${args.verboseHeader} (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')}): ${args.sql}`);
-            }
+            this.log(args.verboseHeader, args.sql);
             const connection = args.transaction ? args.transaction : await this.pool.getConnection();
             if (!connection)
                 throw new db_not_connected_error_1.DBNotConnectedError();
@@ -65,9 +62,7 @@ class MariaDB extends BaseDB_1.BaseDB {
         try {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
-            if (env_1.env.DB_VERBOSE) {
-                console.log(`${args.verboseHeader} (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')}): ${args.command}`);
-            }
+            this.log(args.verboseHeader, args.command);
             const connection = args.transaction ? args.transaction : await this.pool.getConnection();
             if (!connection)
                 throw new db_not_connected_error_1.DBNotConnectedError();
@@ -177,8 +172,7 @@ class MariaDB extends BaseDB_1.BaseDB {
     async startTransaction() {
         if (!this.pool)
             throw new db_not_connected_error_1.DBNotConnectedError();
-        if (env_1.env.DB_VERBOSE)
-            console.log(`STARTTRANSACTION (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')})`);
+        this.log('STARTTRANSACTION', '');
         try {
             const connection = await this.pool.getConnection();
             await connection.beginTransaction();
@@ -191,8 +185,7 @@ class MariaDB extends BaseDB_1.BaseDB {
     async commit(transaction) {
         if (!this.pool)
             throw new db_not_connected_error_1.DBNotConnectedError();
-        if (env_1.env.DB_VERBOSE)
-            console.log(`COMMIT (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')})`);
+        this.log('COMMIT', '');
         try {
             await transaction.commit();
         }
@@ -203,8 +196,7 @@ class MariaDB extends BaseDB_1.BaseDB {
     async rollback(transaction) {
         if (!this.pool)
             throw new db_not_connected_error_1.DBNotConnectedError();
-        if (env_1.env.DB_VERBOSE)
-            console.log(`ROLLBACK (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')})`);
+        this.log('ROLLBACK', '');
         try {
             await transaction.rollback();
         }
@@ -217,7 +209,7 @@ class MariaDB extends BaseDB_1.BaseDB {
             const tables = await this.queryRows({
                 sql: `
         SELECT T.TABLE_NAME AS tableName, T.TABLE_TYPE AS tableType, T.Engine AS engine, 
-               T.TABLE_COLLATION AS tableCollation, T.AUTO_INCREMENT AS autoIncrement,
+               T.TABLE_COLLATION AS tableCollation, 
                COALESCE((SELECT CONCAT ('[', 
                                   GROUP_CONCAT(JSON_OBJECT("columnName", C.COLUMN_NAME,
                                                            "ordinalPosition" , C.ORDINAL_POSITION,

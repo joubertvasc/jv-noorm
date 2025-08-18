@@ -9,7 +9,8 @@
     ".": "./dist/index.js",
     "./connection": "./dist/db/connection.js",
     "./migration": "./dist/migration/newMigration.js",
-    "./deploy": "./dist/migration/deploy.js"
+    "./deploy": "./dist/migration/deploy.js",
+    "./generate": "./dist/generate/generate.js"
   },
   "scripts": {
     "build": "tsc",

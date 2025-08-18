@@ -6,6 +6,7 @@ export interface IEnv {
     DB_USER: string;
     DB_PASSWORD: string;
     DB_DATABASE: string;
+    DB_SCHEMA?: string;
     DB_MAX_POOL: number;
     DB_MIN_POOL: number;
     DB_VERBOSE: boolean;

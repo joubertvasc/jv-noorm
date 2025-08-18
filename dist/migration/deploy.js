@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.migration = void 0;
+exports.deploy = void 0;
 const MigrationHandler_1 = require("./MigrationHandler");
-const migration = async () => {
+const deploy = async () => {
     try {
         await MigrationHandler_1.MigrationHandler.verify();
         process.exit(0);
@@ -11,7 +11,7 @@ const migration = async () => {
         console.log('MIGRATION ERROR: ', err.message);
     }
 };
-exports.migration = migration;
+exports.deploy = deploy;
 setTimeout(async () => {
-    await (0, exports.migration)();
+    await (0, exports.deploy)();
 }, 500);

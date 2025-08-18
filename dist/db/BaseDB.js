@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseDB = void 0;
+const date_fns_1 = require("date-fns");
 const wrong_delete_statement_error_1 = require("../shared/errors/wrong-delete-statement-error");
 const db_error_1 = require("../shared/errors/db-error");
+const env_1 = require("../env");
 class BaseDB {
     softDelete = false;
     metadata;
@@ -53,6 +55,10 @@ class BaseDB {
         catch (err) {
             throw new db_error_1.DBError(err.message);
         }
+    }
+    log(header, log) {
+        if (env_1.env.DB_VERBOSE)
+            console.log(`${header} (${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd HH:mm:ss')}): ${log}`);
     }
 }
 exports.BaseDB = BaseDB;
