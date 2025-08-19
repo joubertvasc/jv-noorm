@@ -28,14 +28,14 @@ class PostgreSQL extends BaseDB_1.BaseDB {
         this.pgConnection.end();
     }
     async query(args) {
-        const client = (args.transaction ? args.transaction : this.pgConnection.connect());
-        const exists = await client.query(args.sql, args.values);
-        return exists.rows;
+        const client = (args.transaction ? args.transaction : await this.pgConnection.connect());
+        const result = await client.query(args.sql, args.values);
+        return result.rows;
     }
     async execCommand(args) {
-        const client = (args.transaction ? args.transaction : this.pgConnection.connect());
-        const rows = client.query(args.command, args.values);
-        return rows;
+        const client = (args.transaction ? args.transaction : await this.pgConnection.connect());
+        const result = await client.query(args.command, args.values);
+        return result.rows;
     }
     async queryRow(args) {
         const result = await this.query({
@@ -44,7 +44,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             verboseHeader: 'QUERYROW',
             transaction: args.transaction,
         });
-        return result.row[0];
+        return result.row.length > 0 ? result.row[0] : [];
     }
     async queryRows(args) {
         const result = await this.query({
@@ -63,7 +63,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             transaction: args.transaction,
         });
         return {
-            id: result[0].id,
+            id: result && result.length > 0 ? result[0].id : 0,
             rowsInserted: 1, // TODO
         };
     }

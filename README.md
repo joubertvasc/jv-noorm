@@ -1,6 +1,7 @@
 # No-ORM
 
-Free yourself from ORMs and code your own queries for MariaDB or PostgreSQL easily and make your applications faster than ever
+Free yourself from ORMs and code your own queries for MariaDB or PostgreSQL easily and make your applications faster than ever.
+Please consider this an experimental project without any warranty. You can use it AS IS.
 
 ## Features
 

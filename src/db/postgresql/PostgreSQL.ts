@@ -41,10 +41,10 @@ export class PostgreSQL extends BaseDB {
     verboseHeader: string;
     transaction?: Connection | PoolClient;
   }): Promise<any> {
-    const client = (args.transaction ? args.transaction : this.pgConnection.connect()) as PoolClient;
-    const exists = await client.query(args.sql, args.values);
+    const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
+    const result = await client.query(args.sql, args.values);
 
-    return exists.rows;
+    return result.rows;
   }
 
   protected async execCommand(args: {
@@ -53,10 +53,10 @@ export class PostgreSQL extends BaseDB {
     verboseHeader: string;
     transaction?: PoolClient;
   }): Promise<any> {
-    const client = (args.transaction ? args.transaction : this.pgConnection.connect()) as PoolClient;
-    const rows = client.query(args.command, args.values);
+    const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
+    const result = await client.query(args.command, args.values);
 
-    return rows;
+    return result.rows;
   }
 
   public async queryRow(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any | null> {
@@ -67,7 +67,7 @@ export class PostgreSQL extends BaseDB {
       transaction: args.transaction,
     });
 
-    return result.row[0];
+    return result.row.length > 0 ? result.row[0] : [];
   }
 
   public async queryRows(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any[] | null> {
@@ -90,7 +90,7 @@ export class PostgreSQL extends BaseDB {
     });
 
     return {
-      id: result[0].id,
+      id: result && result.length > 0 ? result[0].id : 0,
       rowsInserted: 1, // TODO
     };
   }
