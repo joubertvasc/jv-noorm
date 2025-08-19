@@ -1,5 +1,5 @@
 {
-  "name": "noorm",
+  "name": "@jv/no-orm",
   "version": "0.0.1",
   "description": "DB access without ORM",
   "main": "dist/index.js",
@@ -11,6 +11,9 @@
     "./migration": "./dist/migration/newMigration.js",
     "./deploy": "./dist/migration/deploy.js",
     "./generate": "./dist/generate/generate.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",
