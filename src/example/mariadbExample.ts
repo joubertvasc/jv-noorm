@@ -1,4 +1,4 @@
-import { createConnection } from 'noorm/connection';
+import { createConnection } from '../db/connection';
 
 (async () => {
   // Create the connection based on .env informations
