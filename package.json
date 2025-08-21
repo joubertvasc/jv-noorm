@@ -1,10 +1,28 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
   "license": "MIT",
+  "keywords": [
+    "mariadb",
+    "MariaDB",
+    "postgres",
+    "Postgres",
+    "postgresql",
+    "PostgreSQL",
+    "mysql",
+    "MySQL",
+    "db",
+    "database",
+    "noorm",
+    "no-orm",
+    "no orm",
+    "no object relational mapping",
+    "orm",
+    "ORM"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./connection": {
