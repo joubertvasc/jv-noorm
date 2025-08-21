@@ -10,7 +10,7 @@ const databaseURL = ParseURL_1.ParseURL.parseDBUrl(getEnv('DATABASE_URL', null))
 const env = {
     DB_TYPE: getEnv('DB_TYPE', databaseURL?.DB_TYPE || dbType_1.DBType.MariaDB),
     DB_HOST: getEnv('DB_HOST', databaseURL?.DB_HOST || 'localhost'),
-    DB_PORT: getNumberEnv('DB_PORT', databaseURL?.DB_PORT || getEnv('DB_TYPE', dbType_1.DBType.MariaDB) === dbType_1.DBType.MariaDB ? 3306 : 5432),
+    DB_PORT: getNumberEnv('DB_PORT', databaseURL?.DB_PORT || getEnv('DB_TYPE', databaseURL?.DB_TYPE || dbType_1.DBType.MariaDB) === dbType_1.DBType.MariaDB ? 3306 : 5432),
     DB_DATABASE: getEnv('DB_DATABASE', databaseURL?.DB_DATABASE || undefined),
     DB_SCHEMA: getEnv('DB_SCHEMA', databaseURL?.DB_SCHEMA || null),
     DB_USER: getEnv('DB_USER', databaseURL?.DB_USER || undefined),
