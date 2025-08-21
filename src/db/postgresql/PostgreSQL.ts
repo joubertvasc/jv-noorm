@@ -27,7 +27,7 @@ export class PostgreSQL extends BaseDB {
     });
   }
 
-  public async internalConnect(): Promise<any> {
+  protected async internalConnect(): Promise<any> {
     return this.pgConnection;
   }
 
@@ -56,7 +56,16 @@ export class PostgreSQL extends BaseDB {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
     const result = await client.query(args.command, args.values);
 
-    return result.rows;
+    return result.command === 'INSERT'
+      ? {
+          rowCount: result.rowCount,
+          id: result.rows.length > 0 ? result.rows[0].id : 0,
+        }
+      : result.command === 'UPDATE' || result.command === 'DELETE'
+        ? {
+            rowCount: result.rowCount,
+          }
+        : result.rows;
   }
 
   public async queryRow(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any | null> {
@@ -90,8 +99,8 @@ export class PostgreSQL extends BaseDB {
     });
 
     return {
-      id: result && result.length > 0 ? result[0].id : 0,
-      rowsInserted: 1, // TODO
+      id: result.id,
+      rowsInserted: result.rowCount,
     };
   }
 
@@ -104,7 +113,7 @@ export class PostgreSQL extends BaseDB {
     });
 
     return {
-      rowsUpdated: 1, // TODO
+      rowsUpdated: result.rowCount,
     };
   }
 
@@ -121,7 +130,7 @@ export class PostgreSQL extends BaseDB {
     });
 
     return {
-      rowsDeleted: 1, // TODO
+      rowsDeleted: result.rowCount,
     };
   }
 

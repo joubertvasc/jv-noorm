@@ -32,7 +32,7 @@ export abstract class BaseDB {
     this.metadata = await this.getDBMetadata();
   }
 
-  public abstract internalConnect(): Promise<any>;
+  protected abstract internalConnect(): Promise<any>;
   public abstract close(): Promise<any>;
   protected abstract query(args: {
     sql: string;
