@@ -31,7 +31,7 @@ import { createConnection } from '../db/connection';
 
       // Inserting things into tables without transactions
       const brandInserted = await db.insert({
-        command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+        command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
         values: ['Ford'],
       });
       // This will return the object:
@@ -41,7 +41,7 @@ import { createConnection } from '../db/connection';
       console.log(brandInserted);
 
       const modelInserted = await db.insert({
-        command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+        command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
         values: [brandInserted.id, 'Fiesta'],
       });
       console.log(modelInserted);
@@ -50,22 +50,22 @@ import { createConnection } from '../db/connection';
       const transaction = await db.startTransaction();
       try {
         const otherBrandInserted = await db.insert({
-          command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+          command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
           values: ['Fiat'],
           transaction,
         });
         await db.insert({
-          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
           values: [otherBrandInserted.id, 'Fiat 500'],
           transaction,
         });
         await db.insert({
-          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
           values: [otherBrandInserted.id, 'Panda'],
           transaction,
         });
         await db.insert({
-          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
           values: [otherBrandInserted.id, 'Fastback'],
           transaction,
         });
@@ -132,19 +132,19 @@ import { createConnection } from '../db/connection';
       const secondTransaction = await db.startTransaction();
       try {
         const ferrariBrandInserted = await db.insert({
-          command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+          command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
           values: ['Ferrari'],
           transaction: secondTransaction,
         });
         await db.insert({
-          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
           values: [ferrariBrandInserted.id, '296 GTB'],
           transaction: secondTransaction,
         });
 
         // This command is wrong
         await db.insert({
-          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1)`,
+          command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1) RETURNING id`,
           values: [ferrariBrandInserted.id, 'F40'],
           transaction: secondTransaction,
         });

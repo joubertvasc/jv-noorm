@@ -67,7 +67,7 @@ export class PostgreSQL extends BaseDB {
       transaction: args.transaction,
     });
 
-    return result.row.length > 0 ? result.row[0] : [];
+    return result.length > 0 ? result[0] : [];
   }
 
   public async queryRows(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any[] | null> {
@@ -78,7 +78,7 @@ export class PostgreSQL extends BaseDB {
       transaction: args.transaction,
     });
 
-    return result.rows;
+    return result;
   }
 
   public async insert(args: { command: string; values?: any; transaction?: PoolClient }): Promise<IDBInsertResult> {
