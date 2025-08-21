@@ -1,6 +1,6 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
@@ -8,9 +8,21 @@
   "exports": {
     ".": "./dist/index.js",
     "./connection": "./dist/db/connection.js",
-    "./migration": "./dist/migration/newMigration.js",
-    "./deploy": "./dist/migration/deploy.js",
-    "./generate": "./dist/generate/generate.js"
+    "./migration": {
+      "import": "./dist/migration/newMigration.js",
+      "require": "./dist/migration/newMigration.js",
+      "types": "./dist/migration/newMigration.d.ts"
+    },
+    "./deploy": {
+      "import": "./dist/migration/deploy.js",
+      "require": "./dist/migration/deploy.js",
+      "types": "./dist/migration/deploy.d.ts"
+    },
+    "./generate": {
+      "import": "./dist/generate/generate.js",
+      "require": "./dist/generate/generate.js",
+      "types": "./dist/generate/generate.d.ts"
+    }
   },
   "publishConfig": {
     "access": "public"
