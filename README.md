@@ -59,11 +59,15 @@ MODELS_FOLDER=  # the folder used to save the interfaces with tables definitions
 
 JV-Noorm accept two ways to parse the url:
 
+```
 <protocol>://<user>:<password>@<host>:<port>/<database_name>?schema=<schema>
+```
 
 or
 
+```
 <protocol>://<host>:<port>?user=<user>&password=<password>&database=<database_name>?schema=<schema>
+```
 
 Examples:
 
