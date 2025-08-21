@@ -1,4 +1,4 @@
-# No-ORM
+# JV No ORM
 
 Free yourself from ORMs and code your own queries for MariaDB or PostgreSQL easily and make your applications faster than ever.
 Please consider this an experimental project without any warranty. You can use it AS IS.
@@ -6,7 +6,7 @@ Please consider this an experimental project without any warranty. You can use i
 ## Features
 
 - You are again in control of the database and its performance;
-- Abstraction between MariaDB and PostgreSQL. Noorm uses mysql2 and pg directly, without the heavy overhead of ORMs;
+- Abstraction between MariaDB and PostgreSQL. JV-Noorm uses mysql2 and pg directly, without the heavy overhead of ORMs;
 - Easily control transactions;
 - Create and manage your own migrations with scripts written by yourself;
 - Deploy migrations whenever and however you need.
@@ -16,13 +16,13 @@ Please consider this an experimental project without any warranty. You can use i
 Just type:
 
 ```
-  npm install noorm
+  npm install jv-noorm
 ```
 
 or
 
 ```
-  yarn add noorm
+  yarn add jv-noorm
 ```
 
 ## Configuring your project
@@ -51,7 +51,7 @@ Migrations are scripts with your database changes.
 Create a file named _migration.ts_ in the folder you want and paste this code:
 
 ```
-import createMigration from 'noorm/migration';
+import createMigration from 'jv-noorm/migration';
 
 setTimeout(async () => {
   await createMigration();
@@ -64,7 +64,7 @@ Deploy will run every new script in your database and apply the changes you wrot
 Create a file named _deploy.ts_ in the folder you want and paste this code:
 
 ```
-import deploy from 'noorm/deploy';
+import deploy from 'jv-noorm/deploy';
 
 setTimeout(async () => {
   await deploy();
@@ -77,7 +77,7 @@ You can use these interfaces to type-check your query results.
 Create a file named _generate.ts_ in the folder you want and paste this code:
 
 ```
-import generate from 'noorm/generate';
+import generate from 'jv-noorm/generate';
 
 setTimeout(async () => {
   await generate();
@@ -115,7 +115,7 @@ To deploy the scripts to the database, type:
 yarn deploy
 ```
 
-Noorm will verify all new scripts and execute them in order using mariadb or psql command line tools.
+JV-noorm will verify all new scripts and execute them in order using mariadb or psql command line tools.
 
 To generate interfaces based on your database, type:
 
@@ -123,7 +123,7 @@ To generate interfaces based on your database, type:
 yarn generate
 ```
 
-Noorm will generate multiple interface files, one for each table your database has.
+JV-noorm will generate multiple interface files, one for each table your database has.
 
 # Usage
 
