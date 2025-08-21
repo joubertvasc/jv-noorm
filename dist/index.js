@@ -1,5 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createConnection = void 0;
+exports.generate = exports.createMigration = exports.deploy = exports.createConnection = void 0;
 var connection_1 = require("../src/db/connection");
 Object.defineProperty(exports, "createConnection", { enumerable: true, get: function () { return connection_1.createConnection; } });
+var deploy_1 = require("./migration/deploy");
+Object.defineProperty(exports, "deploy", { enumerable: true, get: function () { return deploy_1.deploy; } });
+var newMigration_1 = require("./migration/newMigration");
+Object.defineProperty(exports, "createMigration", { enumerable: true, get: function () { return newMigration_1.createMigration; } });
+var generate_1 = require("../src/generate/generate");
+Object.defineProperty(exports, "generate", { enumerable: true, get: function () { return generate_1.generate; } });
