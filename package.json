@@ -1,13 +1,17 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
   "license": "MIT",
   "exports": {
     ".": "./dist/index.js",
-    "./connection": "./dist/db/connection.js",
+    "./connection": {
+      "import": "./dist/db/connection.js",
+      "require": "./dist/db/connection.js",
+      "types": "./dist/db/connection.d.ts"
+    },
     "./migration": {
       "import": "./dist/migration/newMigration.js",
       "require": "./dist/migration/newMigration.js",
