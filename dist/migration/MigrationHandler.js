@@ -32,7 +32,7 @@ class MigrationHandler {
             console.log('No MariaDB client found.');
             process.exit(1);
         }
-        const db = (0, connection_1.createConnection)();
+        const db = (0, connection_1.createNoORMConnection)();
         db.connect();
         try {
             await this.executeUpdate(db);

@@ -1,2 +1,2 @@
 import { BaseDB } from './BaseDB';
-export declare function createConnection(): BaseDB;
+export declare function createNoORMConnection(): BaseDB;

@@ -26,7 +26,7 @@ const generate = async () => {
         console.log('No MariaDB client found.');
         process.exit(1);
     }
-    const db = (0, connection_1.createConnection)();
+    const db = (0, connection_1.createNoORMConnection)();
     await db.connect();
     const folder = env_1.env.MODELS_FOLDER;
     if (!fs_1.default.existsSync(folder)) {

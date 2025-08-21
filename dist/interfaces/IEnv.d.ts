@@ -1,6 +1,7 @@
 import { DBType } from '../enum/dbType';
 export interface IEnv {
     DB_TYPE: DBType;
+    DATABASE_URL?: string;
     DB_HOST: string;
     DB_PORT: number;
     DB_USER: string;

@@ -5,14 +5,16 @@ require("dotenv/config");
 const env_not_defined_error_1 = require("./shared/errors/env-not-defined-error");
 const invalid_value_error_1 = require("./shared/errors/invalid-value-error");
 const dbType_1 = require("./enum/dbType");
+const ParseURL_1 = require("./shared/utils/ParseURL");
+const databaseURL = ParseURL_1.ParseURL.parseDBUrl(getEnv('DATABASE_URL', null));
 const env = {
-    DB_TYPE: getEnv('DB_TYPE', dbType_1.DBType.MariaDB),
-    DB_HOST: getEnv('DB_HOST', 'localhost'),
-    DB_PORT: getNumberEnv('DB_PORT', 3306),
-    DB_DATABASE: getEnv('DB_DATABASE', undefined),
-    DB_SCHEMA: getEnv('DB_SCHEMA', null),
-    DB_USER: getEnv('DB_USER', undefined),
-    DB_PASSWORD: getEnv('DB_PASSWORD', undefined),
+    DB_TYPE: getEnv('DB_TYPE', databaseURL?.DB_TYPE || dbType_1.DBType.MariaDB),
+    DB_HOST: getEnv('DB_HOST', databaseURL?.DB_HOST || 'localhost'),
+    DB_PORT: getNumberEnv('DB_PORT', databaseURL?.DB_PORT || getEnv('DB_TYPE', dbType_1.DBType.MariaDB) === dbType_1.DBType.MariaDB ? 3306 : 5432),
+    DB_DATABASE: getEnv('DB_DATABASE', databaseURL?.DB_DATABASE || undefined),
+    DB_SCHEMA: getEnv('DB_SCHEMA', databaseURL?.DB_SCHEMA || null),
+    DB_USER: getEnv('DB_USER', databaseURL?.DB_USER || undefined),
+    DB_PASSWORD: getEnv('DB_PASSWORD', databaseURL?.DB_PASSWORD || undefined),
     DB_MAX_POOL: getNumberEnv('DB_MAX_POOL', 10),
     DB_MIN_POOL: getNumberEnv('DB_MIN_POOL', 1),
     DB_VERBOSE: getBooleanEnv('DB_VERBOSE', false),
