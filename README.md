@@ -51,7 +51,7 @@ Migrations are scripts with your database changes.
 Create a file named _migration.ts_ in the folder you want and paste this code:
 
 ```
-import createMigration from 'jv-noorm/migration';
+import { createMigration } from 'jv-noorm/migration';
 
 setTimeout(async () => {
   await createMigration();
@@ -64,7 +64,7 @@ Deploy will run every new script in your database and apply the changes you wrot
 Create a file named _deploy.ts_ in the folder you want and paste this code:
 
 ```
-import deploy from 'jv-noorm/deploy';
+import { deploy } from 'jv-noorm/deploy';
 
 setTimeout(async () => {
   await deploy();
@@ -77,7 +77,7 @@ You can use these interfaces to type-check your query results.
 Create a file named _generate.ts_ in the folder you want and paste this code:
 
 ```
-import generate from 'jv-noorm/generate';
+import { generate } from 'jv-noorm/generate';
 
 setTimeout(async () => {
   await generate();
