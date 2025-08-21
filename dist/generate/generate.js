@@ -115,7 +115,7 @@ function findCorrectType(dataType) {
     }
     return 'any';
 }
-setTimeout(async () => {
-    console.log('GENERATE');
-    await (0, exports.generate)();
-}, 500);
+// setTimeout(async () => {
+//   console.log('GENERATE');
+//   await generate();
+// }, 500);

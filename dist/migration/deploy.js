@@ -12,6 +12,6 @@ const deploy = async () => {
     }
 };
 exports.deploy = deploy;
-setTimeout(async () => {
-    await (0, exports.deploy)();
-}, 500);
+// setTimeout(async () => {
+//   await deploy();
+// }, 500);
