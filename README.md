@@ -55,6 +55,7 @@ import { createMigration } from 'jv-noorm';
 
 setTimeout(async () => {
   await createMigration();
+  process.exit(0);
 }, 500);
 ```
 
@@ -68,6 +69,7 @@ import { deploy } from 'jv-noorm';
 
 setTimeout(async () => {
   await deploy();
+  process.exit(0);
 }, 500);
 ```
 
@@ -81,6 +83,7 @@ import { generate } from 'jv-noorm';
 
 setTimeout(async () => {
   await generate();
+  process.exit(0);
 }, 500);
 ```
 
@@ -89,15 +92,16 @@ setTimeout(async () => {
 Add three scripts to create migrations and deploy them:
 
 ```
+"type": "module",
 "scripts": {
    ... whatever you have ...
-    "migration": "ts-node-dev <folder>/migration.ts",
-    "deploy": "ts-node-dev <folder>/deploy.ts",
-    "generate": "ts-node-dev <folder>/generate.ts"
+    "migration": "tsx <folder>/migration.ts",
+    "deploy": "tsx <folder>/deploy.ts",
+    "generate": "tsx <folder>/generate.ts"
   },
 ```
 
-You can change ts-node-dev for your convenience.
+Don't forget to add tsx to your projeto, if you don't have it.
 
 # Testing:
 
