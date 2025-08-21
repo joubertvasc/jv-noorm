@@ -45,6 +45,34 @@ SCRIPTS_FOLDER= # the folder your migration scripts will be saved
 MODELS_FOLDER=  # the folder used to save the interfaces with tables definitions
 ```
 
+or, you can connect to the database using a DATABASE_URL field:
+
+```
+DATABASE_URL =  # the URL used for connection
+DB_MAX_POOL=    # Max number of pool connections
+DB_MIN_POOL=    # Min number of pool connections
+DB_VERBOSE=     # If you want to see debug information in the console, set this to true
+SCRIPTS_FOLDER= # the folder your migration scripts will be saved
+MODELS_FOLDER=  # the folder used to save the interfaces with tables definitions
+
+```
+
+JV-Noorm accept two ways to parse the url:
+
+<protocol>://<user>:<password>@<host>:<port>/<database_name>?schema=<schema>
+
+or
+
+<protocol>://<host>:<port>?user=<user>&password=<password>&database=<database_name>?schema=<schema>
+
+Examples:
+
+mysql://localhost:3306?user=myusere&password=mypassword&database=mydatabase
+
+or
+
+postgresql://myuser:mypassword@localhost:5432/mydatabase?schema=public
+
 - Now, add to your project a script to create migrations:
 
 Migrations are scripts with your database changes.
