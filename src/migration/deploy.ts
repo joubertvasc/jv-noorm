@@ -9,6 +9,6 @@ export const deploy = async () => {
   }
 };
 
-setTimeout(async () => {
-  await deploy();
-}, 500);
+// setTimeout(async () => {
+//   await deploy();
+// }, 500);

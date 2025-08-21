@@ -123,7 +123,7 @@ function findCorrectType(dataType: string): string {
   return 'any';
 }
 
-setTimeout(async () => {
-  console.log('GENERATE');
-  await generate();
-}, 500);
+// setTimeout(async () => {
+//   console.log('GENERATE');
+//   await generate();
+// }, 500);

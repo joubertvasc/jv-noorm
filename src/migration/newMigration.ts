@@ -45,6 +45,6 @@ export const createMigration = async () => {
   }
 };
 
-setTimeout(async () => {
-  await createMigration();
-}, 500);
+// setTimeout(async () => {
+//   await createMigration();
+// }, 500);
