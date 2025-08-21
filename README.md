@@ -134,13 +134,13 @@ JV-noorm will generate multiple interface files, one for each table your databas
 import the connection:
 
 ```
-import { createConnection } from 'jv-noorm';
+import { createNoORMConnection } from 'jv-noorm';
 ```
 
 Create the object:
 
 ```
-const db = createConnection();
+const db = createNoORMConnection();
 ```
 
 Now, db has the instance of the lib prepared to use MariaDB or PostgreSQL according with your .env definition.

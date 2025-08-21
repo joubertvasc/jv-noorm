@@ -1,10 +1,21 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "debug": "ts-node-dev ./src/example/index.ts",
+    "migration": "ts-node-dev ./src/migration/newMigration.ts",
+    "deploy": "ts-node-dev ./src/migration/deploy.ts",
+    "generate": "ts-node-dev ./src/generate/generate.ts"
+  },
   "keywords": [
     "mariadb",
     "MariaDB",
@@ -30,6 +41,26 @@
       "require": "./dist/db/connection.js",
       "types": "./dist/db/connection.d.ts"
     },
+    "./BaseDB": {
+      "import": "./dist/db/BaseDB.js",
+      "require": "./dist/db/BaseDB.js",
+      "types": "./dist/db/BaseDB.d.ts"
+    },
+    "./MariaDB": {
+      "import": "./dist/db/mariadb/MariaDB.js",
+      "require": "./dist/db/mariadb/MariaDB.js",
+      "types": "./dist/db/mariadb/MariaDB.d.ts"
+    },
+    "./pool": {
+      "import": "./dist/db/mariadb/pool.js",
+      "require": "./dist/db/mariadb/pool.js",
+      "types": "./dist/db/mariadb/pool.d.ts"
+    },
+    "./PostgreSQL": {
+      "import": "./dist/db/postgresql/PostgreSQL.js",
+      "require": "./dist/db/postgresql/PostgreSQL.js",
+      "types": "./dist/db/postgresql/PostgreSQL.d.ts"
+    },
     "./migration": {
       "import": "./dist/migration/newMigration.js",
       "require": "./dist/migration/newMigration.js",
@@ -44,18 +75,102 @@
       "import": "./dist/generate/generate.js",
       "require": "./dist/generate/generate.js",
       "types": "./dist/generate/generate.d.ts"
+    },
+    "./AlreadyExistsError": {
+      "import": "./dist/shared/errors/already-exists-error.js",
+      "require": "./dist/shared/errors/already-exists-error.js",
+      "types": "./dist/shared/errors/already-exists-error.d.ts"
+    },
+    "./ConnectionError": {
+      "import": "./dist/shared/errors/connection-error.js",
+      "require": "./dist/shared/errors/connection-error.js",
+      "types": "./dist/shared/errors/connection-error.d.ts"
+    },
+    "./DBError": {
+      "import": "./dist/shared/errors/db-error.js",
+      "require": "./dist/shared/errors/db-error.js",
+      "types": "./dist/shared/errors/db-error.d.ts"
+    },
+    "./DBNotConnectedError": {
+      "import": "./dist/shared/errors/db-not-connected-error.js",
+      "require": "./dist/shared/errors/db-not-connected-error.js",
+      "types": "./dist/shared/errors/db-not-connected-error.d.ts"
+    },
+    "./DBSchemaNotDefinedError": {
+      "import": "./dist/shared/errors/db-schema-not-defined-error.js",
+      "require": "./dist/shared/errors/db-schema-not-defined-error.js",
+      "types": "./dist/shared/errors/db-schema-not-defined-error.d.ts"
+    },
+    "./EnvNotDefinedError": {
+      "import": "./dist/shared/errors/env-not-defined-error.js",
+      "require": "./dist/shared/errors/env-not-defined-error.js",
+      "types": "./dist/shared/errors/env-not-defined-error.d.ts"
+    },
+    "./InvalidDBTypeError": {
+      "import": "./dist/shared/errors/invalid-db-type-error.js",
+      "require": "./dist/shared/errors/invalid-db-type-error.js",
+      "types": "./dist/shared/errors/invalid-db-type-error.d.ts"
+    },
+    "./InvalidValueError": {
+      "import": "./dist/shared/errors/invalid-value-error.js",
+      "require": "./dist/shared/errors/invalid-value-error.js",
+      "types": "./dist/shared/errors/invalid-value-error.d.ts"
+    },
+    "./PoolNotInitializedError": {
+      "import": "./dist/shared/errors/pool-not-initialized-error.js",
+      "require": "./dist/shared/errors/pool-not-initialized-error.js",
+      "types": "./dist/shared/errors/pool-not-initialized-error.d.ts"
+    },
+    "./WrongDeleteStatementError": {
+      "import": "./dist/shared/errors/wrong-delete-statement-error.js",
+      "require": "./dist/shared/errors/wrong-delete-statement-error.js",
+      "types": "./dist/shared/errors/wrong-delete-statement-error.d.ts"
+    },
+    "./DBURLError": {
+      "import": "./dist/shared/errors/db-url-error.js",
+      "require": "./dist/shared/errors/db-url-erro.js",
+      "types": "./dist/shared/errors/db-url-error.dts"
+    },
+    "./DBType": {
+      "import": "./dist/enum/dbType.js",
+      "require": "./dist/enum/dbType.js",
+      "types": "./dist/enum/dbType.d.ts"
+    },
+    "./IColumnMetaDataResultSet": {
+      "import": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
+      "require": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
+      "types": "./dist/db/interfaces/IColumnMetaDataResultSet.d.ts"
+    },
+    "./IDBDeleteResult": {
+      "import": "./dist/db/interfaces/IDBDeleteResult.js",
+      "require": "./dist/db/interfaces/IDBDeleteResult.js",
+      "types": "./dist/db/interfaces/IDBDeleteResult.d.ts"
+    },
+    "./IDBInsertResult": {
+      "import": "./dist/db/interfaces/IDBInsertResult.js",
+      "require": "./dist/db/interfaces/IDBInsertResult.js",
+      "types": "./dist/db/interfaces/IDBInsertResult.d.ts"
+    },
+    "./IDBUpdateResult": {
+      "import": "./dist/db/interfaces/IDBUpdateResult.js",
+      "require": "./dist/db/interfaces/IDBUpdateResult.js",
+      "types": "./dist/db/interfaces/IDBUpdateResult.d.ts"
+    },
+    "./IDeleteOptions": {
+      "import": "./dist/db/interfaces/IDeleteOptions.js",
+      "require": "./dist/db/interfaces/IDeleteOptions.js",
+      "types": "./dist/db/interfaces/IDeleteOptions.d.ts"
+    },
+    "./ITableConstraintsResultSet": {
+      "import": "./dist/db/interfaces/ITableConstraintsResultSet.js",
+      "require": "./dist/db/interfaces/ITableConstraintsResultSet.js",
+      "types": "./dist/db/interfaces/ITableConstraintsResultSet.d.ts"
+    },
+    "./ITableMetaDataResultSet": {
+      "import": "./dist/db/interfaces/ITableMetaDataResultSet.js",
+      "require": "./dist/db/interfaces/ITableMetaDataResultSet.js",
+      "types": "./dist/db/interfaces/ITableMetaDataResultSet.d.ts"
     }
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "debug": "ts-node-dev ./src/example/index.ts",
-    "migration": "ts-node-dev ./src/migration/newMigration.ts",
-    "deploy": "ts-node-dev ./src/migration/deploy.ts",
-    "generate": "ts-node-dev ./src/generate/generate.ts"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
@@ -63,7 +178,8 @@
     "fs": "^0.0.1-security",
     "mysql2": "^3.14.3",
     "pg": "^8.16.3",
-    "tsx": "^4.20.4"
+    "tsx": "^4.20.4",
+    "url": "^0.11.4"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

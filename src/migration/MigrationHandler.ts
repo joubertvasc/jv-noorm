@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { env } from '../env';
-import { createConnection } from '../db/connection';
+import { createNoORMConnection } from '../db/connection';
 import { BaseDB } from '../db/BaseDB';
 import { DBType } from '../enum/dbType';
 import { DBError } from '../shared/errors/db-error';
@@ -29,7 +29,7 @@ export class MigrationHandler {
       process.exit(1);
     }
 
-    const db = createConnection();
+    const db = createNoORMConnection();
     db.connect();
 
     try {

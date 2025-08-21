@@ -5,7 +5,7 @@ import { InvalidDBTypeError } from '../shared/errors/invalid-db-type-error';
 import { BaseDB } from './BaseDB';
 import { PostgreSQL } from './postgresql/PostgreSQL';
 
-export function createConnection(): BaseDB {
+export function createNoORMConnection(): BaseDB {
   switch (env.DB_TYPE) {
     case DBType.MariaDB:
       return new MariaDB();

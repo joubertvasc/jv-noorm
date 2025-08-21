@@ -1,8 +1,8 @@
-import { createConnection } from '../db/connection';
+import { createNoORMConnection } from '../db/connection';
 
 (async () => {
   // Create the connection based on .env informations
-  const db = createConnection();
+  const db = createNoORMConnection();
 
   try {
     try {

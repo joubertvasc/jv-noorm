@@ -3,15 +3,21 @@ import { EnvNotDefinedError } from './shared/errors/env-not-defined-error';
 import { InvalidValueError } from './shared/errors/invalid-value-error';
 import { IEnv } from './interfaces/IEnv';
 import { DBType } from './enum/dbType';
+import { ParseURL } from './shared/utils/ParseURL';
+
+const databaseURL = ParseURL.parseDBUrl(getEnv('DATABASE_URL', null));
 
 const env: IEnv = {
   DB_TYPE: getEnv('DB_TYPE', DBType.MariaDB),
-  DB_HOST: getEnv('DB_HOST', 'localhost'),
-  DB_PORT: getNumberEnv('DB_PORT', 3306),
-  DB_DATABASE: getEnv('DB_DATABASE', undefined),
-  DB_SCHEMA: getEnv('DB_SCHEMA', null),
-  DB_USER: getEnv('DB_USER', undefined),
-  DB_PASSWORD: getEnv('DB_PASSWORD', undefined),
+  DB_HOST: getEnv('DB_HOST', databaseURL?.DB_HOST || 'localhost'),
+  DB_PORT: getNumberEnv(
+    'DB_PORT',
+    databaseURL?.DB_PORT || getEnv('DB_TYPE', DBType.MariaDB) === DBType.MariaDB ? 3306 : 5432,
+  ),
+  DB_DATABASE: getEnv('DB_DATABASE', databaseURL?.DB_DATABASE || undefined),
+  DB_SCHEMA: getEnv('DB_SCHEMA', databaseURL?.DB_SCHEMA || null),
+  DB_USER: getEnv('DB_USER', databaseURL?.DB_USER || undefined),
+  DB_PASSWORD: getEnv('DB_PASSWORD', databaseURL?.DB_PASSWORD || undefined),
   DB_MAX_POOL: getNumberEnv('DB_MAX_POOL', 10),
   DB_MIN_POOL: getNumberEnv('DB_MIN_POOL', 1),
   DB_VERBOSE: getBooleanEnv('DB_VERBOSE', false),

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { createConnection } from '../db/connection';
+import { createNoORMConnection } from '../db/connection';
 import { DBType } from '../enum/dbType';
 import { env } from '../env';
 import { InvalidDBTypeError } from '../shared/errors/invalid-db-type-error';
@@ -21,7 +21,7 @@ export const generate = async () => {
     process.exit(1);
   }
 
-  const db = createConnection();
+  const db = createNoORMConnection();
   await db.connect();
 
   const folder = env.MODELS_FOLDER;
