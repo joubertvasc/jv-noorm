@@ -12,7 +12,8 @@ const env: IEnv = {
   DB_HOST: getEnv('DB_HOST', databaseURL?.DB_HOST || 'localhost'),
   DB_PORT: getNumberEnv(
     'DB_PORT',
-    databaseURL?.DB_PORT || getEnv('DB_TYPE', databaseURL?.DB_TYPE || DBType.MariaDB) === DBType.MariaDB ? 3306 : 5432,
+    databaseURL?.DB_PORT ||
+      (getEnv('DB_TYPE', databaseURL?.DB_TYPE || DBType.MariaDB) === DBType.MariaDB ? 3306 : 5432),
   ),
   DB_DATABASE: getEnv('DB_DATABASE', databaseURL?.DB_DATABASE || undefined),
   DB_SCHEMA: getEnv('DB_SCHEMA', databaseURL?.DB_SCHEMA || null),
