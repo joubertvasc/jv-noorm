@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const connection_1 = require("noorm/connection");
+const connection_1 = require("../db/connection");
 (async () => {
     // Create the connection based on .env informations
     const db = (0, connection_1.createConnection)();
@@ -28,7 +28,7 @@ const connection_1 = require("noorm/connection");
             });
             // Inserting things into tables without transactions
             const brandInserted = await db.insert({
-                command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+                command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
                 values: ['Ford'],
             });
             // This will return the object:
@@ -37,7 +37,7 @@ const connection_1 = require("noorm/connection");
             // the new value will be here
             console.log(brandInserted);
             const modelInserted = await db.insert({
-                command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+                command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
                 values: [brandInserted.id, 'Fiesta'],
             });
             console.log(modelInserted);
@@ -45,22 +45,22 @@ const connection_1 = require("noorm/connection");
             const transaction = await db.startTransaction();
             try {
                 const otherBrandInserted = await db.insert({
-                    command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+                    command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
                     values: ['Fiat'],
                     transaction,
                 });
                 await db.insert({
-                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
                     values: [otherBrandInserted.id, 'Fiat 500'],
                     transaction,
                 });
                 await db.insert({
-                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
                     values: [otherBrandInserted.id, 'Panda'],
                     transaction,
                 });
                 await db.insert({
-                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
                     values: [otherBrandInserted.id, 'Fastback'],
                     transaction,
                 });
@@ -116,18 +116,18 @@ const connection_1 = require("noorm/connection");
             const secondTransaction = await db.startTransaction();
             try {
                 const ferrariBrandInserted = await db.insert({
-                    command: `INSERT INTO tmp_brands(brand_name) VALUES ($1)`,
+                    command: `INSERT INTO tmp_brands(brand_name) VALUES ($1) RETURNING id`,
                     values: ['Ferrari'],
                     transaction: secondTransaction,
                 });
                 await db.insert({
-                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2)`,
+                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1, $2) RETURNING id`,
                     values: [ferrariBrandInserted.id, '296 GTB'],
                     transaction: secondTransaction,
                 });
                 // This command is wrong
                 await db.insert({
-                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1)`,
+                    command: `INSERT INTO tmp_models(brand_id, model_name) VALUES ($1) RETURNING id`,
                     values: [ferrariBrandInserted.id, 'F40'],
                     transaction: secondTransaction,
                 });

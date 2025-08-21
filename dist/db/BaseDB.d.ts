@@ -12,7 +12,7 @@ export declare abstract class BaseDB {
     setSoftDelete(useSoftDelete: boolean): void;
     getMetadata(): ITableMetaDataResultSet[];
     connect(): Promise<any>;
-    abstract internalConnect(): Promise<any>;
+    protected abstract internalConnect(): Promise<any>;
     abstract close(): Promise<any>;
     protected abstract query(args: {
         sql: string;

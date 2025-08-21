@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const connection_1 = require("noorm/connection");
+const connection_1 = require("../db/connection");
 (async () => {
     // Create the connection based on .env informations
     const db = (0, connection_1.createConnection)();

@@ -8,7 +8,7 @@ import { BaseDB } from '../../db/BaseDB';
 export declare class PostgreSQL extends BaseDB {
     private pgConnection;
     constructor();
-    internalConnect(): Promise<any>;
+    protected internalConnect(): Promise<any>;
     close(): Promise<any>;
     protected query(args: {
         sql: string;

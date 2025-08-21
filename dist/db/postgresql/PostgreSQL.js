@@ -35,7 +35,16 @@ class PostgreSQL extends BaseDB_1.BaseDB {
     async execCommand(args) {
         const client = (args.transaction ? args.transaction : await this.pgConnection.connect());
         const result = await client.query(args.command, args.values);
-        return result.rows;
+        return result.command === 'INSERT'
+            ? {
+                rowCount: result.rowCount,
+                id: result.rows.length > 0 ? result.rows[0].id : 0,
+            }
+            : result.command === 'UPDATE' || result.command === 'DELETE'
+                ? {
+                    rowCount: result.rowCount,
+                }
+                : result.rows;
     }
     async queryRow(args) {
         const result = await this.query({
@@ -44,7 +53,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             verboseHeader: 'QUERYROW',
             transaction: args.transaction,
         });
-        return result.row.length > 0 ? result.row[0] : [];
+        return result.length > 0 ? result[0] : [];
     }
     async queryRows(args) {
         const result = await this.query({
@@ -53,7 +62,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             verboseHeader: 'QUERYROWS',
             transaction: args.transaction,
         });
-        return result.rows;
+        return result;
     }
     async insert(args) {
         const result = await this.execCommand({
@@ -63,8 +72,8 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             transaction: args.transaction,
         });
         return {
-            id: result && result.length > 0 ? result[0].id : 0,
-            rowsInserted: 1, // TODO
+            id: result.id,
+            rowsInserted: result.rowCount,
         };
     }
     async update(args) {
@@ -75,7 +84,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             transaction: args.transaction,
         });
         return {
-            rowsUpdated: 1, // TODO
+            rowsUpdated: result.rowCount,
         };
     }
     async internalDelete(args) {
@@ -86,7 +95,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             transaction: args.transaction,
         });
         return {
-            rowsDeleted: 1, // TODO
+            rowsDeleted: result.rowCount,
         };
     }
     async exec(args) {
