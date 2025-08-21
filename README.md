@@ -101,7 +101,7 @@ Add three scripts to create migrations and deploy them:
   },
 ```
 
-Don't forget to add tsx to your projeto, if you don't have it.
+Don't forget to add tsx to your project, if you don't have it.
 
 # Testing:
 
