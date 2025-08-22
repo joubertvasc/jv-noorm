@@ -30,12 +30,12 @@ export class MigrationHandler {
     }
 
     const db = createNoORMConnection();
-    db.connect();
+    await db.connect();
 
     try {
       await this.executeUpdate(db);
     } finally {
-      db.close();
+      await db.close();
     }
   }
 

@@ -30,19 +30,35 @@ export default class MariaDB extends BaseDB {
         });
 
         await this.pool.query('SELECT 1');
-        if (env.DB_VERBOSE) console.log('✅ DB Connected');
+        if (env.DB_VERBOSE) this.log('CONNECT', 'DB Connected');
 
         return this.pool;
       } catch (err: any) {
         this.retries++;
-        console.error(`❌ DB pool error (retries ${this.retries}):`, err);
+        this.log('ERROR', `DB pool error (retries ${this.retries}): ${err.message}`);
 
         if (this.retries >= MAX_RETRIES) {
           throw new DBError('Max number of retries. Aborting...');
         }
 
-        console.log(`⏳ Retrying again in ${RETRY_DELAY / 1000}s...`);
-        await new Promise(res => setTimeout(res, RETRY_DELAY));
+        this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
+        // Simple delay without setTimeout dependency  
+        await new Promise(res => {
+          let count = 0;
+          const interval = () => {
+            count++;
+            if (count >= RETRY_DELAY) {
+              res(undefined);
+            } else {
+              // Use a simple loop delay
+              for (let i = 0; i < 1000000; i++) {
+                // Simple CPU delay
+              }
+              interval();
+            }
+          };
+          interval();
+        });
       }
     }
 
@@ -229,6 +245,9 @@ export default class MariaDB extends BaseDB {
       await transaction.commit();
     } catch (err: any) {
       throw new DBError(err.message);
+    } finally {
+      // Sempre libera a conexão após commit
+      transaction.destroy();
     }
   }
 
@@ -240,6 +259,9 @@ export default class MariaDB extends BaseDB {
       await transaction.rollback();
     } catch (err: any) {
       throw new DBError(err.message);
+    } finally {
+      // Sempre libera a conexão após rollback  
+      transaction.destroy();
     }
   }
 

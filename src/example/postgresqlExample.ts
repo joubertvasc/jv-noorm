@@ -234,7 +234,7 @@ import { createNoORMConnection } from '../db/connection';
     await db.exec({ command: `DROP TABLE tmp_brands` });
 
     // Let's close the connection;
-    db.close();
+    await db.close();
 
     process.exit(0);
   }
