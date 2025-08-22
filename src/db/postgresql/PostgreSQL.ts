@@ -7,6 +7,8 @@ import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResul
 import { BaseDB } from '../../db/BaseDB';
 import { env } from '../../env';
 import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defined-error';
+import { DBError } from '../../shared/errors/db-error';
+import { initPool, closePool } from './pool';
 
 export class PostgreSQL extends BaseDB {
   private pgConnection: Pool;
@@ -16,23 +18,35 @@ export class PostgreSQL extends BaseDB {
 
     if (!env.DB_SCHEMA) throw new DBSchemaNotDefinedError();
 
-    this.pgConnection = new Pool({
+    this.pgConnection = initPool({
       connectionString: `postgresql://${env.DB_USER}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}?schema=${env.DB_SCHEMA}`,
-      keepAlive: true,
-      max: 100,
-      min: 30,
+      max: env.DB_MAX_POOL || 10,
+      min: env.DB_MIN_POOL || 2,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-      maxLifetimeSeconds: 60,
+      connectionTimeoutMillis: 5000,
+      maxLifetimeSeconds: 3600, // 1 hora ao invés de 1 minuto
     });
   }
 
   protected async internalConnect(): Promise<any> {
-    return this.pgConnection;
+    try {
+      // Testa a conexão
+      await this.pgConnection.query('SELECT 1');
+      if (env.DB_VERBOSE) this.log('CONNECT', 'PostgreSQL Connected');
+      return this.pgConnection;
+    } catch (err: any) {
+      this.log('ERROR', `PostgreSQL connection error: ${err.message}`);
+      throw new DBError(`PostgreSQL connection failed: ${err.message}`);
+    }
   }
 
-  public async close(): Promise<any> {
-    this.pgConnection.end();
+  public async close(): Promise<void> {
+    try {
+      await closePool();
+      if (env.DB_VERBOSE) this.log('CLOSE', 'PostgreSQL Pool closed');
+    } catch (err: any) {
+      this.log('ERROR', `Error closing PostgreSQL pool: ${err.message}`);
+    }
   }
 
   protected async query(args: {
@@ -42,9 +56,17 @@ export class PostgreSQL extends BaseDB {
     transaction?: Connection | PoolClient;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
-    const result = await client.query(args.sql, args.values);
-
-    return result.rows;
+    
+    try {
+      this.log(args.verboseHeader, args.sql);
+      const result = await client.query(args.sql, args.values);
+      return result.rows;
+    } finally {
+      // Libera a conexão apenas se não estiver em transação
+      if (!args.transaction) {
+        client.release();
+      }
+    }
   }
 
   protected async execCommand(args: {
@@ -54,18 +76,27 @@ export class PostgreSQL extends BaseDB {
     transaction?: PoolClient;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
-    const result = await client.query(args.command, args.values);
+    
+    try {
+      this.log(args.verboseHeader, args.command);
+      const result = await client.query(args.command, args.values);
 
-    return result.command === 'INSERT'
-      ? {
-          rowCount: result.rowCount,
-          id: result.rows.length > 0 ? result.rows[0].id : 0,
-        }
-      : result.command === 'UPDATE' || result.command === 'DELETE'
+      return result.command === 'INSERT'
         ? {
             rowCount: result.rowCount,
+            id: result.rows.length > 0 ? result.rows[0].id : 0,
           }
-        : result.rows;
+        : result.command === 'UPDATE' || result.command === 'DELETE'
+          ? {
+              rowCount: result.rowCount,
+            }
+          : result.rows;
+    } finally {
+      // Libera a conexão apenas se não estiver em transação
+      if (!args.transaction) {
+        client.release();
+      }
+    }
   }
 
   public async queryRow(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any | null> {
@@ -146,19 +177,34 @@ export class PostgreSQL extends BaseDB {
   public async startTransaction(): Promise<PoolClient> {
     const client: PoolClient = await this.pgConnection.connect();
     this.log('STARTTRANSACTION', '');
-    await client.query('BEGIN');
-
-    return client;
+    try {
+      await client.query('BEGIN');
+      return client;
+    } catch (err) {
+      // Se falhar ao iniciar a transação, libera a conexão
+      client.release();
+      throw err;
+    }
   }
 
   public async commit(transaction: PoolClient): Promise<void> {
-    this.log('COMMIT', '');
-    await transaction.query('COMMIT');
+    try {
+      this.log('COMMIT', '');
+      await transaction.query('COMMIT');
+    } finally {
+      // Sempre libera a conexão após commit
+      transaction.release();
+    }
   }
 
   public async rollback(transaction: PoolClient): Promise<void> {
-    this.log('ROLLBACK', '');
-    await transaction.query('ROLLBACK');
+    try {
+      this.log('ROLLBACK', '');
+      await transaction.query('ROLLBACK');
+    } finally {
+      // Sempre libera a conexão após rollback
+      transaction.release();
+    }
   }
 
   protected async getDBMetadata(transaction?: PoolClient): Promise<ITableMetaDataResultSet[]> {
