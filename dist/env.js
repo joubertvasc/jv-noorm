@@ -41,6 +41,8 @@ function getNumberEnv(key, defaultValue) {
 }
 function getBooleanEnv(key, defaultValue) {
     const value = getEnv(key, defaultValue);
+    if (typeof value === 'boolean')
+        return value;
     if (value === null ||
         value === undefined ||
         (value !== true &&
