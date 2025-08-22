@@ -49,6 +49,8 @@ const generate = async () => {
         count++;
     }
     console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
+    // Importante: fechar a conexão
+    await db.close();
 };
 exports.generate = generate;
 function changeCase(name, pascalCase = false) {

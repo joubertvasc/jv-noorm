@@ -23,17 +23,34 @@ class MariaDB extends BaseDB_1.BaseDB {
                 });
                 await this.pool.query('SELECT 1');
                 if (env_1.env.DB_VERBOSE)
-                    console.log('✅ DB Connected');
+                    this.log('CONNECT', 'DB Connected');
                 return this.pool;
             }
             catch (err) {
                 this.retries++;
-                console.error(`❌ DB pool error (retries ${this.retries}):`, err);
+                this.log('ERROR', `DB pool error (retries ${this.retries}): ${err.message}`);
                 if (this.retries >= MAX_RETRIES) {
                     throw new db_error_1.DBError('Max number of retries. Aborting...');
                 }
-                console.log(`⏳ Retrying again in ${RETRY_DELAY / 1000}s...`);
-                await new Promise(res => setTimeout(res, RETRY_DELAY));
+                this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
+                // Simple delay without setTimeout dependency  
+                await new Promise(res => {
+                    let count = 0;
+                    const interval = () => {
+                        count++;
+                        if (count >= RETRY_DELAY) {
+                            res(undefined);
+                        }
+                        else {
+                            // Use a simple loop delay
+                            for (let i = 0; i < 1000000; i++) {
+                                // Simple CPU delay
+                            }
+                            interval();
+                        }
+                    };
+                    interval();
+                });
             }
         }
         return null;
@@ -192,6 +209,10 @@ class MariaDB extends BaseDB_1.BaseDB {
         catch (err) {
             throw new db_error_1.DBError(err.message);
         }
+        finally {
+            // Sempre libera a conexão após commit
+            transaction.destroy();
+        }
     }
     async rollback(transaction) {
         if (!this.pool)
@@ -202,6 +223,10 @@ class MariaDB extends BaseDB_1.BaseDB {
         }
         catch (err) {
             throw new db_error_1.DBError(err.message);
+        }
+        finally {
+            // Sempre libera a conexão após rollback  
+            transaction.destroy();
         }
     }
     async getDBMetadata(transaction) {

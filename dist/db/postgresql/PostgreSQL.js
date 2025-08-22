@@ -1,50 +1,85 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgreSQL = void 0;
-const pg_1 = require("pg");
 const BaseDB_1 = require("../../db/BaseDB");
 const env_1 = require("../../env");
 const db_schema_not_defined_error_1 = require("../../shared/errors/db-schema-not-defined-error");
+const db_error_1 = require("../../shared/errors/db-error");
+const pool_1 = require("./pool");
 class PostgreSQL extends BaseDB_1.BaseDB {
     pgConnection;
     constructor() {
         super();
         if (!env_1.env.DB_SCHEMA)
             throw new db_schema_not_defined_error_1.DBSchemaNotDefinedError();
-        this.pgConnection = new pg_1.Pool({
+        this.pgConnection = (0, pool_1.initPool)({
             connectionString: `postgresql://${env_1.env.DB_USER}:${env_1.env.DB_PASSWORD}@${env_1.env.DB_HOST}:${env_1.env.DB_PORT}/${env_1.env.DB_DATABASE}?schema=${env_1.env.DB_SCHEMA}`,
-            keepAlive: true,
-            max: 100,
-            min: 30,
+            max: env_1.env.DB_MAX_POOL || 10,
+            min: env_1.env.DB_MIN_POOL || 2,
             idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
+            connectionTimeoutMillis: 5000,
+            maxLifetimeSeconds: 3600, // 1 hora ao invés de 1 minuto
         });
     }
     async internalConnect() {
-        return this.pgConnection;
+        try {
+            // Testa a conexão
+            await this.pgConnection.query('SELECT 1');
+            if (env_1.env.DB_VERBOSE)
+                this.log('CONNECT', 'PostgreSQL Connected');
+            return this.pgConnection;
+        }
+        catch (err) {
+            this.log('ERROR', `PostgreSQL connection error: ${err.message}`);
+            throw new db_error_1.DBError(`PostgreSQL connection failed: ${err.message}`);
+        }
     }
     async close() {
-        this.pgConnection.end();
+        try {
+            await (0, pool_1.closePool)();
+            if (env_1.env.DB_VERBOSE)
+                this.log('CLOSE', 'PostgreSQL Pool closed');
+        }
+        catch (err) {
+            this.log('ERROR', `Error closing PostgreSQL pool: ${err.message}`);
+        }
     }
     async query(args) {
         const client = (args.transaction ? args.transaction : await this.pgConnection.connect());
-        const result = await client.query(args.sql, args.values);
-        return result.rows;
+        try {
+            this.log(args.verboseHeader, args.sql);
+            const result = await client.query(args.sql, args.values);
+            return result.rows;
+        }
+        finally {
+            // Libera a conexão apenas se não estiver em transação
+            if (!args.transaction) {
+                client.release();
+            }
+        }
     }
     async execCommand(args) {
         const client = (args.transaction ? args.transaction : await this.pgConnection.connect());
-        const result = await client.query(args.command, args.values);
-        return result.command === 'INSERT'
-            ? {
-                rowCount: result.rowCount,
-                id: result.rows.length > 0 ? result.rows[0].id : 0,
-            }
-            : result.command === 'UPDATE' || result.command === 'DELETE'
+        try {
+            this.log(args.verboseHeader, args.command);
+            const result = await client.query(args.command, args.values);
+            return result.command === 'INSERT'
                 ? {
                     rowCount: result.rowCount,
+                    id: result.rows.length > 0 ? result.rows[0].id : 0,
                 }
-                : result.rows;
+                : result.command === 'UPDATE' || result.command === 'DELETE'
+                    ? {
+                        rowCount: result.rowCount,
+                    }
+                    : result.rows;
+        }
+        finally {
+            // Libera a conexão apenas se não estiver em transação
+            if (!args.transaction) {
+                client.release();
+            }
+        }
     }
     async queryRow(args) {
         const result = await this.query({
@@ -109,16 +144,35 @@ class PostgreSQL extends BaseDB_1.BaseDB {
     async startTransaction() {
         const client = await this.pgConnection.connect();
         this.log('STARTTRANSACTION', '');
-        await client.query('BEGIN');
-        return client;
+        try {
+            await client.query('BEGIN');
+            return client;
+        }
+        catch (err) {
+            // Se falhar ao iniciar a transação, libera a conexão
+            client.release();
+            throw err;
+        }
     }
     async commit(transaction) {
-        this.log('COMMIT', '');
-        await transaction.query('COMMIT');
+        try {
+            this.log('COMMIT', '');
+            await transaction.query('COMMIT');
+        }
+        finally {
+            // Sempre libera a conexão após commit
+            transaction.release();
+        }
     }
     async rollback(transaction) {
-        this.log('ROLLBACK', '');
-        await transaction.query('ROLLBACK');
+        try {
+            this.log('ROLLBACK', '');
+            await transaction.query('ROLLBACK');
+        }
+        finally {
+            // Sempre libera a conexão após rollback
+            transaction.release();
+        }
     }
     async getDBMetadata(transaction) {
         const result = await this.queryRows({

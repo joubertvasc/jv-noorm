@@ -33,12 +33,12 @@ class MigrationHandler {
             process.exit(1);
         }
         const db = (0, connection_1.createNoORMConnection)();
-        db.connect();
+        await db.connect();
         try {
             await this.executeUpdate(db);
         }
         finally {
-            db.close();
+            await db.close();
         }
     }
     static async getScripts(db) {

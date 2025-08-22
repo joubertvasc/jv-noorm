@@ -9,7 +9,7 @@ export declare class PostgreSQL extends BaseDB {
     private pgConnection;
     constructor();
     protected internalConnect(): Promise<any>;
-    close(): Promise<any>;
+    close(): Promise<void>;
     protected query(args: {
         sql: string;
         values?: any;
