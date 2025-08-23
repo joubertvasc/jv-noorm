@@ -1,5 +1,12 @@
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { RowDataPacket, ResultSetHeader, Pool, Connection } from 'mysql2/promise';
-import { format } from 'date-fns';
 import { initPool } from './pool';
 import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
 import { env } from '../../env';
@@ -42,7 +49,7 @@ export default class MariaDB extends BaseDB {
         }
 
         this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
-        // Simple delay without setTimeout dependency  
+        // Simple delay without setTimeout dependency
         await new Promise(res => {
           let count = 0;
           const interval = () => {
@@ -260,7 +267,7 @@ export default class MariaDB extends BaseDB {
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
-      // Sempre libera a conexão após rollback  
+      // Sempre libera a conexão após rollback
       transaction.destroy();
     }
   }

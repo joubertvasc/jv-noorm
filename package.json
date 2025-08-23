@@ -1,17 +1,15 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
-  "license": "MIT",
+  "license": "BSD-4-Clause",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch",
-    "debug": "ts-node-dev ./src/example/index.ts",
     "migration": "ts-node-dev ./src/migration/newMigration.ts",
     "deploy": "ts-node-dev ./src/migration/deploy.ts",
     "generate": "ts-node-dev ./src/generate/generate.ts"

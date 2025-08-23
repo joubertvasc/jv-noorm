@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import fs from 'fs';
 import { format } from 'date-fns';
 import { RemoveInvalidChars } from '../shared/utils/RemoveInvalidChars';
@@ -44,7 +52,3 @@ export const createMigration = async () => {
     process.exit(0);
   }
 };
-
-// setTimeout(async () => {
-//   await createMigration();
-// }, 500);

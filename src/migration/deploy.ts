@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { MigrationHandler } from './MigrationHandler';
 
 export const deploy = async () => {
@@ -8,7 +16,3 @@ export const deploy = async () => {
     console.log('MIGRATION ERROR: ', err.message);
   }
 };
-
-// setTimeout(async () => {
-//   await deploy();
-// }, 500);

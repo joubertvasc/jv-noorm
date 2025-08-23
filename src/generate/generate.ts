@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import fs from 'fs';
 import { createNoORMConnection } from '../db/connection';
 import { DBType } from '../enum/dbType';
@@ -52,7 +60,7 @@ export const generate = async () => {
   }
 
   console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
-  
+
   // Importante: fechar a conexão
   await db.close();
 };
@@ -125,8 +133,3 @@ function findCorrectType(dataType: string): string {
 
   return 'any';
 }
-
-// setTimeout(async () => {
-//   console.log('GENERATE');
-//   await generate();
-// }, 500);

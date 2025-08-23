@@ -1,4 +1,11 @@
 "use strict";
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -41,6 +48,3 @@ const createMigration = async () => {
     }
 };
 exports.createMigration = createMigration;
-// setTimeout(async () => {
-//   await createMigration();
-// }, 500);

@@ -1,4 +1,11 @@
 "use strict";
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 const pool_1 = require("./pool");
 const env_1 = require("../../env");
@@ -33,7 +40,7 @@ class MariaDB extends BaseDB_1.BaseDB {
                     throw new db_error_1.DBError('Max number of retries. Aborting...');
                 }
                 this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
-                // Simple delay without setTimeout dependency  
+                // Simple delay without setTimeout dependency
                 await new Promise(res => {
                     let count = 0;
                     const interval = () => {
@@ -225,7 +232,7 @@ class MariaDB extends BaseDB_1.BaseDB {
             throw new db_error_1.DBError(err.message);
         }
         finally {
-            // Sempre libera a conexão após rollback  
+            // Sempre libera a conexão após rollback
             transaction.destroy();
         }
     }

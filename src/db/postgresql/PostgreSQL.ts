@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2025, Joubert Vasconcelos
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { Pool, PoolClient } from 'pg';
 import { Connection } from 'mysql2/promise';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
@@ -56,7 +64,7 @@ export class PostgreSQL extends BaseDB {
     transaction?: Connection | PoolClient;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
-    
+
     try {
       this.log(args.verboseHeader, args.sql);
       const result = await client.query(args.sql, args.values);
@@ -76,7 +84,7 @@ export class PostgreSQL extends BaseDB {
     transaction?: PoolClient;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
-    
+
     try {
       this.log(args.verboseHeader, args.command);
       const result = await client.query(args.command, args.values);
