@@ -6,11 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface ITableConstraintsResultSet {
-  deleteRule: string;
-  columnName: string;
-  constraintName: string;
-  tableName: string;
-  referencedTable: string;
-  referencedColumn: string;
+export class ConstraintError extends Error {
+  constructor(message?: string, obj?: any) {
+    super(message ?? 'invalid-metadata-error');
+  }
 }

@@ -6,11 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface ITableConstraintsResultSet {
-  deleteRule: string;
-  columnName: string;
-  constraintName: string;
-  tableName: string;
-  referencedTable: string;
-  referencedColumn: string;
+export class BadPrimaryKeyFormatError extends Error {
+  constructor(message?: string) {
+    super(message ?? 'bad-primary-key-format-error');
+  }
 }

@@ -74,6 +74,11 @@
       "require": "./dist/generate/generate.js",
       "types": "./dist/generate/generate.d.ts"
     },
+    "./BasicCrud": {
+      "import": "./dist/generate/basicCrud/BasicCrud.js",
+      "require": "./dist/generate/basicCrud/BasicCrud.js",
+      "types": "./dist/generate/basicCrud/BasicCrud.d.ts"
+    },
     "./AlreadyExistsError": {
       "import": "./dist/shared/errors/already-exists-error.js",
       "require": "./dist/shared/errors/already-exists-error.js",
@@ -98,6 +103,11 @@
       "import": "./dist/shared/errors/db-schema-not-defined-error.js",
       "require": "./dist/shared/errors/db-schema-not-defined-error.js",
       "types": "./dist/shared/errors/db-schema-not-defined-error.d.ts"
+    },
+    "./DBMetadataNotLoadedError": {
+      "import": "./dist/shared/errors/db-metadata-not-loaded.js",
+      "require": "./dist/shared/errors/db-metadata-not-loaded.js",
+      "types": "./dist/shared/errors/db-metadata-not-loaded.d.ts"
     },
     "./EnvNotDefinedError": {
       "import": "./dist/shared/errors/env-not-defined-error.js",
@@ -128,6 +138,26 @@
       "import": "./dist/shared/errors/db-url-error.js",
       "require": "./dist/shared/errors/db-url-erro.js",
       "types": "./dist/shared/errors/db-url-error.dts"
+    },
+    "./TableDoesNotExistsError": {
+      "import": "./dist/shared/errors/table-does-not-exists-error.js",
+      "require": "./dist/shared/errors/table-does-not-exists-error.js",
+      "types": "./dist/shared/errors/table-does-not-exists-error.d.ts"
+    },
+    "./InvalidMetadataError": {
+      "import": "./dist/shared/errors/invalid-metadata-error.js",
+      "require": "./dist/shared/errors/invalid-metadata-error.js",
+      "types": "./dist/shared/errors/invalid-metadata-error.d.ts"
+    },
+    "./BadPrimaryKeyFormatError": {
+      "import": "./dist/shared/errors/bad-primary-key-format-error.js",
+      "require": "./dist/shared/errors/bad-primary-key-format-error.js",
+      "types": "./dist/shared/errors/bad-primary-key-format-error.d.ts"
+    },
+    "./ConstraintError": {
+      "import": "./dist/shared/errors/constraint-error.js",
+      "require": "./dist/shared/errors/constraint-error.js",
+      "types": "./dist/shared/errors/constraint-error.d.ts"
     },
     "./DBType": {
       "import": "./dist/enum/dbType.js",
@@ -174,12 +204,14 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
     "fs": "^0.0.1-security",
+    "lodash": "^4.17.21",
     "mysql2": "^3.14.3",
     "pg": "^8.16.3",
     "tsx": "^4.20.4",
     "url": "^0.11.4"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.20",
     "@types/node": "^24.3.0",
     "@types/pg": "^8.15.5",
     "eslint-import-resolver-exports": "^1.0.0-beta.5",

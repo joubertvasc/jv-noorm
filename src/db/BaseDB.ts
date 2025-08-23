@@ -17,6 +17,7 @@ import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { WrongDeleteStatementError } from '../shared/errors/wrong-delete-statement-error';
 import { DBError } from '../shared/errors/db-error';
 import { env } from '../env';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 
 export abstract class BaseDB {
   private softDelete = false;
@@ -130,6 +131,82 @@ export abstract class BaseDB {
     } catch (err: any) {
       throw new DBError(err.message);
     }
+  }
+
+  public getTableMetadata(tableName: string): ITableMetaDataResultSet | null {
+    if (!this.metadata) return null;
+
+    const tableMetadata: ITableMetaDataResultSet[] = this.metadata?.filter((table: ITableMetaDataResultSet) => {
+      return tableName.toLowerCase() === table.tableName.toLowerCase();
+    });
+
+    if (!tableMetadata || tableMetadata.length === 0) return null;
+
+    return tableMetadata[0];
+  }
+
+  public findCreatedAtColumn(table: string): string | null {
+    const tableMetadata = this.getTableMetadata(table);
+
+    if (!tableMetadata) return null;
+
+    for (const column of tableMetadata.columns) {
+      if (column.columnName.toLowerCase() === 'created_at' || column.columnName.toLowerCase() === 'createdat') {
+        return column.columnName;
+      }
+    }
+
+    return null;
+  }
+
+  public findUpdatedAtColumn(table: string): string | null {
+    const tableMetadata = this.getTableMetadata(table);
+
+    if (!tableMetadata) return null;
+
+    for (const column of tableMetadata.columns) {
+      if (column.columnName.toLowerCase() === 'updated_at' || column.columnName.toLowerCase() === 'updatedat') {
+        return column.columnName;
+      }
+    }
+
+    return null;
+  }
+
+  public findDeletedAtColumn(table: string): string | null {
+    const tableMetadata = this.getTableMetadata(table);
+
+    if (!tableMetadata) return null;
+
+    for (const column of tableMetadata.columns) {
+      if (column.columnName.toLowerCase() === 'deleted_at' || column.columnName.toLowerCase() === 'deletedat') {
+        return column.columnName;
+      }
+    }
+
+    return null;
+  }
+
+  public getTableReferencedConstraints(referencedTableName: string): ITableConstraintsResultSet[] {
+    if (!this.metadata) return [];
+
+    const constraints: ITableConstraintsResultSet[] = [];
+    for (const table of this.metadata) {
+      for (const column of table.columns) {
+        if (column.referencedTable && column.referencedTable === referencedTableName) {
+          constraints.push({
+            deleteRule: column.deleteRule || 'NO ACTION',
+            tableName: table.tableName,
+            columnName: column.columnName,
+            constraintName: column.constraintName || '',
+            referencedTable: column.referencedTable || '',
+            referencedColumn: column.referencedColumn || '',
+          });
+        }
+      }
+    }
+
+    return constraints;
   }
 
   log(header: string, log: string): void {

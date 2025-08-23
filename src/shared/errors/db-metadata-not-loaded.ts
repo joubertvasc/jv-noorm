@@ -6,11 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface ITableConstraintsResultSet {
-  deleteRule: string;
-  columnName: string;
-  constraintName: string;
-  tableName: string;
-  referencedTable: string;
-  referencedColumn: string;
+export class DBMetadataNotLoadedError extends Error {
+  constructor(message?: string) {
+    super(message || 'db-metadata-not-loaded');
+  }
 }
