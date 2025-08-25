@@ -31,6 +31,9 @@ class BaseDB {
     async beginTransaction() {
         return this.startTransaction();
     }
+    async updateMetadata() {
+        this.metadata = await this.getDBMetadata();
+    }
     async delete(args) {
         try {
             if ((this.isSoftDelete() || args.options?.softDelete === true) && args.options?.softDelete !== false) {
@@ -62,6 +65,69 @@ class BaseDB {
         catch (err) {
             throw new db_error_1.DBError(err.message);
         }
+    }
+    getTableMetadata(tableName) {
+        if (!this.metadata)
+            return null;
+        const tableMetadata = this.metadata?.filter((table) => {
+            return tableName.toLowerCase() === table.tableName.toLowerCase();
+        });
+        if (!tableMetadata || tableMetadata.length === 0)
+            return null;
+        return tableMetadata[0];
+    }
+    findCreatedAtColumn(table) {
+        const tableMetadata = this.getTableMetadata(table);
+        if (!tableMetadata)
+            return null;
+        for (const column of tableMetadata.columns) {
+            if (column.columnName.toLowerCase() === 'created_at' || column.columnName.toLowerCase() === 'createdat') {
+                return column.columnName;
+            }
+        }
+        return null;
+    }
+    findUpdatedAtColumn(table) {
+        const tableMetadata = this.getTableMetadata(table);
+        if (!tableMetadata)
+            return null;
+        for (const column of tableMetadata.columns) {
+            if (column.columnName.toLowerCase() === 'updated_at' || column.columnName.toLowerCase() === 'updatedat') {
+                return column.columnName;
+            }
+        }
+        return null;
+    }
+    findDeletedAtColumn(table) {
+        const tableMetadata = this.getTableMetadata(table);
+        if (!tableMetadata)
+            return null;
+        for (const column of tableMetadata.columns) {
+            if (column.columnName.toLowerCase() === 'deleted_at' || column.columnName.toLowerCase() === 'deletedat') {
+                return column.columnName;
+            }
+        }
+        return null;
+    }
+    getTableReferencedConstraints(referencedTableName) {
+        if (!this.metadata)
+            return [];
+        const constraints = [];
+        for (const table of this.metadata) {
+            for (const column of table.columns) {
+                if (column.referencedTable && column.referencedTable === referencedTableName) {
+                    constraints.push({
+                        deleteRule: column.deleteRule || 'NO ACTION',
+                        tableName: table.tableName,
+                        columnName: column.columnName,
+                        constraintName: column.constraintName || '',
+                        referencedTable: column.referencedTable || '',
+                        referencedColumn: column.referencedColumn || '',
+                    });
+                }
+            }
+        }
+        return constraints;
     }
     log(header, log) {
         if (env_1.env.DB_VERBOSE)

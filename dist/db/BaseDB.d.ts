@@ -12,6 +12,7 @@ import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 export declare abstract class BaseDB {
     private softDelete;
     private metadata;
@@ -68,11 +69,17 @@ export declare abstract class BaseDB {
     abstract commit(transaction: Connection | PoolClient): Promise<void>;
     abstract rollback(transaction: Connection | PoolClient): Promise<void>;
     protected abstract getDBMetadata(transaction?: Connection | PoolClient): Promise<ITableMetaDataResultSet[]>;
+    updateMetadata(): Promise<void>;
     delete(args: {
         command: string;
         values?: any;
         options?: IDeleteOptions;
         transaction?: Connection | PoolClient;
     }): Promise<IDBDeleteResult>;
+    getTableMetadata(tableName: string): ITableMetaDataResultSet | null;
+    findCreatedAtColumn(table: string): string | null;
+    findUpdatedAtColumn(table: string): string | null;
+    findDeletedAtColumn(table: string): string | null;
+    getTableReferencedConstraints(referencedTableName: string): ITableConstraintsResultSet[];
     log(header: string, log: string): void;
 }

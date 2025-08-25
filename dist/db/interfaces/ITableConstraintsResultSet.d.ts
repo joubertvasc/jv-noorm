@@ -7,6 +7,9 @@
  */
 export interface ITableConstraintsResultSet {
     deleteRule: string;
+    columnName: string;
+    constraintName: string;
     tableName: string;
-    referecedTableName: string;
+    referencedTable: string;
+    referencedColumn: string;
 }
