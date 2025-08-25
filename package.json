@@ -1,6 +1,6 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
