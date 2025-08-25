@@ -18,6 +18,15 @@
       "runtimeArgs": ["tsx", "--env-file=.env", "--inspect-brk", "./src/example/postgresqlExample.ts"],
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Crud Example",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "--env-file=.env", "--inspect-brk", "./src/example/crudExample.ts"],
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true
     }
   ]
 }

@@ -164,6 +164,16 @@
       "require": "./dist/enum/dbType.js",
       "types": "./dist/enum/dbType.d.ts"
     },
+    "./Operations": {
+      "import": "./dist/enum/operations.js",
+      "require": "./dist/enum/operations.js",
+      "types": "./dist/enum/operations.d.ts"
+    },
+    "./DeleteRule": {
+      "import": "./dist/enum/deleteRule.js",
+      "require": "./dist/enum/deleteRule.js",
+      "types": "./dist/enum/deleteRule.d.ts"
+    },
     "./IColumnMetaDataResultSet": {
       "import": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
       "require": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
@@ -198,6 +208,11 @@
       "import": "./dist/db/interfaces/ITableMetaDataResultSet.js",
       "require": "./dist/db/interfaces/ITableMetaDataResultSet.js",
       "types": "./dist/db/interfaces/ITableMetaDataResultSet.d.ts"
+    },
+    "./IDropDown": {
+      "import": "./dist/generate/interfaces/IDropDown.js",
+      "require": "./dist/generate/interfaces/IDropDown.js",
+      "types": "./dist/generate/interfaces/IDropDown.d.ts"
     }
   },
   "dependencies": {

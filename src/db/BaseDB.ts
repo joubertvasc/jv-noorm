@@ -92,6 +92,10 @@ export abstract class BaseDB {
   public abstract rollback(transaction: Connection | PoolClient): Promise<void>;
   protected abstract getDBMetadata(transaction?: Connection | PoolClient): Promise<ITableMetaDataResultSet[]>;
 
+  public async updateMetadata(): Promise<void> {
+    this.metadata = await this.getDBMetadata();
+  }
+
   public async delete(args: {
     command: string;
     values?: any;
