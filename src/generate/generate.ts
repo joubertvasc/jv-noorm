@@ -78,39 +78,43 @@ export const generate = async () => {
 
   const db = createNoORMConnection();
   await db.connect();
+  try {
+    try {
+      const folder = env.MODELS_FOLDER;
 
-  const folder = env.MODELS_FOLDER;
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true });
+        fs.chmodSync(folder, '777');
+      }
 
-  if (!fs.existsSync(folder)) {
-    fs.mkdirSync(folder, { recursive: true });
-    fs.chmodSync(folder, '777');
-  }
+      let count = 0;
+      for (const table of db.getMetadata()) {
+        const interfaceName = `${changeCase(table.tableName, true)}DTO`;
+        const filename = `${folder}/${interfaceName}.ts`;
 
-  let count = 0;
-  for (const table of db.getMetadata()) {
-    const interfaceName = `${changeCase(table.tableName, true)}DTO`;
-    const filename = `${folder}/${interfaceName}.ts`;
+        if (!override && fs.existsSync(filename)) continue;
+        if (tableName && table.tableName !== tableName) continue;
 
-    if (!override && fs.existsSync(filename)) continue;
-    if (tableName && table.tableName !== tableName) continue;
+        let interfaceFile = `export interface ${interfaceName} {\n`;
+        for (const column of table.columns) {
+          interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+        }
 
-    let interfaceFile = `export interface ${interfaceName} {\n`;
-    for (const column of table.columns) {
-      interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+        interfaceFile += '}';
+
+        if (fs.existsSync(filename)) fs.unlinkSync(filename);
+        fs.writeFileSync(filename, interfaceFile);
+
+        count++;
+      }
+
+      console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
+    } catch (error: any) {
+      console.log('GENERATE ERROR: ', error.message);
     }
-
-    interfaceFile += '}';
-
-    if (fs.existsSync(filename)) fs.unlinkSync(filename);
-    fs.writeFileSync(filename, interfaceFile);
-
-    count++;
+  } finally {
+    await db.close();
   }
-
-  console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
-
-  // Importante: fechar a conexão
-  await db.close();
 };
 
 function changeCase(name: string, pascalCase: boolean = false): string {

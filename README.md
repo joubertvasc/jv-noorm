@@ -85,10 +85,10 @@ Create a file named _migration.ts_ in the folder you want and paste this code:
 ```
 import { createMigration } from 'jv-noorm';
 
-setTimeout(async () => {
+(async () => {
   await createMigration();
   process.exit(0);
-}, 500);
+})();
 ```
 
 - Now, again, add to your project a script to deploy the migrations:
@@ -99,10 +99,10 @@ Create a file named _deploy.ts_ in the folder you want and paste this code:
 ```
 import { deploy } from 'jv-noorm';
 
-setTimeout(async () => {
+(async () => {
   await deploy();
   process.exit(0);
-}, 500);
+})();
 ```
 
 - Add another file to your project with a script to generate interfaces to your project:
@@ -113,10 +113,10 @@ Create a file named _generate.ts_ in the folder you want and paste this code:
 ```
 import { generate } from 'jv-noorm';
 
-setTimeout(async () => {
+(async () => {
   await generate();
   process.exit(0);
-}, 500);
+})();
 ```
 
 - Modify your package.json:
@@ -140,7 +140,7 @@ Don't forget to add tsx to your project, if you don't have it.
 To create a new script file type:
 
 ```
-yarn migration '<the name of the script without sql'
+yarn migration '<the name of the script without .sql'
 ```
 
 This will create a file with a predefined header and open it in VSCode. You can fill it with any SQL command you want, separating them with ; character.
@@ -157,6 +157,12 @@ To generate interfaces based on your database, type:
 
 ```
 yarn generate
+```
+
+for more options, try:
+
+```
+yarn generate --help
 ```
 
 JV-noorm will generate multiple interface files, one for each table your database has.
@@ -198,4 +204,4 @@ The jv-noorm lib has some functions:
 - await db.rollback: used to rollback changes;
 - await db.close: used to finish the pool connections.
 
-There are examples in _src/example_, one for MariaDB and other for PostgreSQL. These examples demonstrates how to connect, disconnect, create/drop tables manually, run queries, and perform inserts, updates, deletes, and transactions.
+There are examples in _src/example_, for MariaDB and PostgreSQL. These examples demonstrates how to connect, disconnect, create/drop tables manually, run queries, and perform inserts, updates, deletes, and transactions.

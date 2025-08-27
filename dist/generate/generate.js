@@ -77,32 +77,40 @@ const generate = async () => {
     }
     const db = (0, connection_1.createNoORMConnection)();
     await db.connect();
-    const folder = env_1.env.MODELS_FOLDER;
-    if (!fs_1.default.existsSync(folder)) {
-        fs_1.default.mkdirSync(folder, { recursive: true });
-        fs_1.default.chmodSync(folder, '777');
-    }
-    let count = 0;
-    for (const table of db.getMetadata()) {
-        const interfaceName = `${changeCase(table.tableName, true)}DTO`;
-        const filename = `${folder}/${interfaceName}.ts`;
-        if (!override && fs_1.default.existsSync(filename))
-            continue;
-        if (tableName && table.tableName !== tableName)
-            continue;
-        let interfaceFile = `export interface ${interfaceName} {\n`;
-        for (const column of table.columns) {
-            interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+    try {
+        try {
+            const folder = env_1.env.MODELS_FOLDER;
+            if (!fs_1.default.existsSync(folder)) {
+                fs_1.default.mkdirSync(folder, { recursive: true });
+                fs_1.default.chmodSync(folder, '777');
+            }
+            let count = 0;
+            for (const table of db.getMetadata()) {
+                const interfaceName = `${changeCase(table.tableName, true)}DTO`;
+                const filename = `${folder}/${interfaceName}.ts`;
+                if (!override && fs_1.default.existsSync(filename))
+                    continue;
+                if (tableName && table.tableName !== tableName)
+                    continue;
+                let interfaceFile = `export interface ${interfaceName} {\n`;
+                for (const column of table.columns) {
+                    interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+                }
+                interfaceFile += '}';
+                if (fs_1.default.existsSync(filename))
+                    fs_1.default.unlinkSync(filename);
+                fs_1.default.writeFileSync(filename, interfaceFile);
+                count++;
+            }
+            console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
         }
-        interfaceFile += '}';
-        if (fs_1.default.existsSync(filename))
-            fs_1.default.unlinkSync(filename);
-        fs_1.default.writeFileSync(filename, interfaceFile);
-        count++;
+        catch (error) {
+            console.log('GENERATE ERROR: ', error.message);
+        }
     }
-    console.log(count + ` file${count !== 1 ? 's' : ''} generated.`);
-    // Importante: fechar a conexão
-    await db.close();
+    finally {
+        await db.close();
+    }
 };
 exports.generate = generate;
 function changeCase(name, pascalCase = false) {
