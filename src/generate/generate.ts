@@ -13,6 +13,53 @@ import { env } from '../env';
 import { InvalidDBTypeError } from '../shared/errors/invalid-db-type-error';
 
 export const generate = async () => {
+  let help = false;
+  let override = false;
+  let tableName = undefined;
+
+  for (const arg of process.argv) {
+    if (arg === '-h' || arg === '--help' || arg === '-?') {
+      help = true;
+      break;
+    }
+
+    if (arg.startsWith('--table=') || arg.startsWith('-t=')) {
+      tableName = arg.substring(arg.indexOf('=') + 1);
+    }
+
+    if (arg === '--override' || arg === '-o') {
+      override = true;
+    }
+  }
+
+  if (help) {
+    console.log('Usage:');
+    console.log('yarn generate <options>');
+    console.log('');
+    console.log('or');
+    console.log('');
+    console.log('node generate <options>');
+    console.log('');
+    console.log('Options:');
+    console.log('-h or --help: shows this informations');
+    console.log('-o or --override: (optional) override previous generated interfaces');
+    console.log('-t=<table_name> or --table=<table_name>: (optional) generate just one interface.');
+    console.log('');
+    console.log('Ex:');
+    console.log('');
+    console.log('yarn generate');
+    console.log('yarn generate --override');
+    console.log('yarn generate --table=users');
+    console.log('yarn generate --override --table=users');
+    console.log('');
+    console.log('or');
+    console.log('');
+    console.log('yarn generate -o');
+    console.log('yarn generate -t=users');
+    console.log('yarn generate -o -t=users');
+    process.exit(0);
+  }
+
   try {
     switch (env.DB_TYPE) {
       case DBType.MariaDB:
@@ -25,7 +72,7 @@ export const generate = async () => {
         throw new InvalidDBTypeError();
     }
   } catch (err: any) {
-    console.log('No MariaDB client found.');
+    console.log('No Database Client found');
     process.exit(1);
   }
 
@@ -41,17 +88,18 @@ export const generate = async () => {
 
   let count = 0;
   for (const table of db.getMetadata()) {
-    const interfaceName = `I${changeCase(table.tableName, true)}`;
+    const interfaceName = `${changeCase(table.tableName, true)}DTO`;
+    const filename = `${folder}/${interfaceName}.ts`;
+
+    if (!override && fs.existsSync(filename)) continue;
+    if (tableName && table.tableName !== tableName) continue;
 
     let interfaceFile = `export interface ${interfaceName} {\n`;
     for (const column of table.columns) {
-      // interfaceFile += `  ${changeCase(column.columnName, false)}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
       interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
     }
 
     interfaceFile += '}';
-
-    const filename = `${folder}/${interfaceName}.ts`;
 
     if (fs.existsSync(filename)) fs.unlinkSync(filename);
     fs.writeFileSync(filename, interfaceFile);
@@ -133,3 +181,7 @@ function findCorrectType(dataType: string): string {
 
   return 'any';
 }
+
+(async () => {
+  await generate();
+})();

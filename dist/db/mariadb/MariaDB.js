@@ -265,9 +265,13 @@ class MariaDB extends BaseDB_1.BaseDB {
                                                           ) ORDER BY C.ORDINAL_POSITION), ']')
                            FROM information_schema.COLUMNS C 
                            LEFT OUTER JOIN information_schema.KEY_COLUMN_USAGE K ON K.TABLE_NAME = C.TABLE_NAME AND 
-                                                                                    K.COLUMN_NAME = C.COLUMN_NAME
-                           LEFT OUTER JOIN information_schema.REFERENTIAL_CONSTRAINTS R ON R.CONSTRAINT_NAME = K.CONSTRAINT_NAME
-                          WHERE C.TABLE_NAME = T.TABLE_NAME), '[]') AS columns
+                                                                                    K.COLUMN_NAME = C.COLUMN_NAME AND
+                                                                                    K.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA AND
+                                                                                    K.CONSTRAINT_NAME <> 'PRIMARY'
+                           LEFT OUTER JOIN information_schema.REFERENTIAL_CONSTRAINTS R ON R.CONSTRAINT_NAME = K.CONSTRAINT_NAME AND 
+                                                                                           R.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA
+                          WHERE C.TABLE_NAME = T.TABLE_NAME
+                            AND C.TABLE_SCHEMA = T.TABLE_SCHEMA), '[]') AS columns
           FROM information_schema.TABLES T
          WHERE T.TABLE_SCHEMA = ?
          ORDER BY T.TABLE_NAME`,

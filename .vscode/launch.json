@@ -27,6 +27,15 @@
       "runtimeArgs": ["tsx", "--env-file=.env", "--inspect-brk", "./src/example/crudExample.ts"],
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Generate",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "--env-file=.env", "--inspect-brk", "./src/generate/generate.ts"],
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true
     }
   ]
 }
