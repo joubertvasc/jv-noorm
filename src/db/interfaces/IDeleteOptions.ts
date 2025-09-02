@@ -8,6 +8,6 @@
 
 export interface IDeleteOptions {
   softDelete?: boolean;
-  userId?: number;
+  userId?: number | string;
   userName?: string;
 }

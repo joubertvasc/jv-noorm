@@ -107,7 +107,7 @@ export abstract class BaseDB {
         const regex = /delete\s+from\s+([`"\[\]\w.]+)/i;
         const match = args.command.match(regex);
         if (match) {
-          const deletedAt: { date: Date; userId?: number; userName?: string } = { date: new Date() };
+          const deletedAt: { date: Date; userId?: number | string; userName?: string } = { date: new Date() };
 
           if (args.options?.userId) deletedAt.userId = args.options.userId;
           if (args.options?.userName) deletedAt.userName = args.options.userName;
