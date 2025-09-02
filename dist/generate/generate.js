@@ -177,6 +177,3 @@ function findCorrectType(dataType) {
     }
     return 'any';
 }
-(async () => {
-    await (0, exports.generate)();
-})();

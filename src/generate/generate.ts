@@ -185,7 +185,3 @@ function findCorrectType(dataType: string): string {
 
   return 'any';
 }
-
-(async () => {
-  await generate();
-})();
