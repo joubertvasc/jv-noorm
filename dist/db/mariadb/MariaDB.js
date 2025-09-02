@@ -20,6 +20,10 @@ class MariaDB extends BaseDB_1.BaseDB {
     async internalConnect() {
         while (this.retries < MAX_RETRIES) {
             try {
+                // Se já existe um pool ativo, não criar outro
+                if (this.pool && !this.isPoolClosed()) {
+                    return this.pool;
+                }
                 this.pool = (0, pool_1.initPool)({
                     user: env_1.env.DB_USER,
                     password: env_1.env.DB_PASSWORD,
@@ -27,10 +31,18 @@ class MariaDB extends BaseDB_1.BaseDB {
                     host: env_1.env.DB_HOST,
                     port: env_1.env.DB_PORT,
                     connectionLimit: env_1.env.DB_MAX_POOL,
+                    // Configurações adicionais para estabilidade
+                    // acquireTimeout: 60000,
+                    // timeout: 60000,
+                    // reconnect: true,
+                    idleTimeout: 300000,
                 });
+                // Configurar eventos do pool para debug
+                this.setupPoolEvents();
                 await this.pool.query('SELECT 1');
                 if (env_1.env.DB_VERBOSE)
                     this.log('CONNECT', 'DB Connected');
+                this.retries = 0; // Reset retries on successful connection
                 return this.pool;
             }
             catch (err) {
@@ -40,63 +52,109 @@ class MariaDB extends BaseDB_1.BaseDB {
                     throw new db_error_1.DBError('Max number of retries. Aborting...');
                 }
                 this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
-                // Simple delay without setTimeout dependency
-                await new Promise(res => {
-                    let count = 0;
-                    const interval = () => {
-                        count++;
-                        if (count >= RETRY_DELAY) {
-                            res(undefined);
-                        }
-                        else {
-                            // Use a simple loop delay
-                            for (let i = 0; i < 1000000; i++) {
-                                // Simple CPU delay
-                            }
-                            interval();
-                        }
-                    };
-                    interval();
-                });
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             }
         }
         return null;
     }
+    setupPoolEvents() {
+        if (!this.pool)
+            return;
+        this.pool.on('connection', connection => {
+            if (env_1.env.DB_VERBOSE)
+                this.log('POOL', `Nova conexão estabelecida: ${connection.threadId}`);
+        });
+        // this.pool.on('error', (err) => {
+        //   this.log('ERROR', `Erro no pool: ${err.message}`);
+        // });
+        // this.pool.on('close', () => {
+        //   this.log('INFO', 'Pool foi fechado');
+        // });
+    }
+    isPoolClosed() {
+        return !this.pool || this.pool._closed === true;
+    }
+    async ensureConnection() {
+        if (this.isPoolClosed()) {
+            this.log('INFO', 'Pool fechado, reconectando...');
+            await this.internalConnect();
+        }
+    }
     async close() {
-        this.pool?.end();
+        if (this.pool && !this.isPoolClosed()) {
+            try {
+                await this.pool.end();
+                if (env_1.env.DB_VERBOSE)
+                    this.log('CLOSE', 'Pool fechado com sucesso');
+            }
+            catch (err) {
+                this.log('ERROR', `Erro ao fechar pool: ${err.message}`);
+            }
+            finally {
+                this.pool = undefined;
+            }
+        }
     }
     async query(args) {
+        let connection;
         try {
+            await this.ensureConnection();
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.sql);
-            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
-            if (!connection)
-                throw new db_not_connected_error_1.DBNotConnectedError();
-            const result = await connection.query(args.sql, args.values);
-            if (!args.transaction)
-                connection.destroy();
-            return !result ? null : result[0];
+            if (args.transaction) {
+                // Para transações, usar a conexão passada diretamente
+                const result = await args.transaction.query(args.sql, args.values);
+                return !result ? null : result[0];
+            }
+            else {
+                // Para queries normais, obter conexão do pool
+                connection = await this.pool.getConnection();
+                if (!connection)
+                    throw new db_not_connected_error_1.DBNotConnectedError();
+                const result = await connection.query(args.sql, args.values);
+                return !result ? null : result[0];
+            }
         }
         catch (err) {
             throw new db_error_1.DBError(err.message);
+        }
+        finally {
+            // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
+            if (connection && !args.transaction) {
+                connection.release();
+            }
         }
     }
     async execCommand(args) {
+        let connection;
         try {
+            await this.ensureConnection();
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.command);
-            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
-            if (!connection)
-                throw new db_not_connected_error_1.DBNotConnectedError();
-            const [result] = await connection.execute(args.command, args.values);
-            if (!args.transaction)
-                connection.destroy();
-            return result ? result : {};
+            if (args.transaction) {
+                // Para transações, usar a conexão passada diretamente
+                const [result] = await args.transaction.execute(args.command, args.values);
+                return result ? result : {};
+            }
+            else {
+                // Para comandos normais, obter conexão do pool
+                connection = await this.pool.getConnection();
+                if (!connection)
+                    throw new db_not_connected_error_1.DBNotConnectedError();
+                const [result] = await connection.execute(args.command, args.values);
+                return result ? result : {};
+            }
         }
         catch (err) {
             throw new db_error_1.DBError(err.message);
+        }
+        finally {
+            // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
+            if (connection && !args.transaction) {
+                connection.release();
+            }
         }
     }
     async queryRow(args) {
@@ -194,12 +252,14 @@ class MariaDB extends BaseDB_1.BaseDB {
         }
     }
     async startTransaction() {
+        await this.ensureConnection();
         if (!this.pool)
             throw new db_not_connected_error_1.DBNotConnectedError();
         this.log('STARTTRANSACTION', '');
         try {
-            const connection = await this.pool.getConnection();
+            const connection = (await this.pool.getConnection());
             await connection.beginTransaction();
+            // Retorna a conexão como Connection para compatibilidade
             return connection;
         }
         catch (err) {
@@ -217,8 +277,8 @@ class MariaDB extends BaseDB_1.BaseDB {
             throw new db_error_1.DBError(err.message);
         }
         finally {
-            // Sempre libera a conexão após commit
-            transaction.destroy();
+            // ✅ CORREÇÃO: Cast para PoolConnection para acessar release()
+            transaction.release();
         }
     }
     async rollback(transaction) {
@@ -232,8 +292,8 @@ class MariaDB extends BaseDB_1.BaseDB {
             throw new db_error_1.DBError(err.message);
         }
         finally {
-            // Sempre libera a conexão após rollback
-            transaction.destroy();
+            // ✅ CORREÇÃO: Cast para PoolConnection para acessar release()
+            transaction.release();
         }
     }
     async getDBMetadata(transaction) {

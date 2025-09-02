@@ -15,6 +15,9 @@ export default class MariaDB extends BaseDB {
     private pool;
     retries: number;
     internalConnect(): Promise<Pool | null>;
+    private setupPoolEvents;
+    private isPoolClosed;
+    private ensureConnection;
     close(): Promise<void>;
     protected query(args: {
         sql: string;

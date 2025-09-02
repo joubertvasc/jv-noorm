@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RowDataPacket, ResultSetHeader, Pool, Connection } from 'mysql2/promise';
+import { RowDataPacket, ResultSetHeader, Pool, Connection, PoolConnection } from 'mysql2/promise';
 import { initPool } from './pool';
 import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
 import { env } from '../../env';
@@ -27,6 +27,11 @@ export default class MariaDB extends BaseDB {
   public async internalConnect(): Promise<Pool | null> {
     while (this.retries < MAX_RETRIES) {
       try {
+        // Se já existe um pool ativo, não criar outro
+        if (this.pool && !this.isPoolClosed()) {
+          return this.pool;
+        }
+
         this.pool = initPool({
           user: env.DB_USER,
           password: env.DB_PASSWORD,
@@ -34,11 +39,20 @@ export default class MariaDB extends BaseDB {
           host: env.DB_HOST,
           port: env.DB_PORT,
           connectionLimit: env.DB_MAX_POOL,
+          // Configurações adicionais para estabilidade
+          // acquireTimeout: 60000,
+          // timeout: 60000,
+          // reconnect: true,
+          idleTimeout: 300000,
         });
+
+        // Configurar eventos do pool para debug
+        this.setupPoolEvents();
 
         await this.pool.query('SELECT 1');
         if (env.DB_VERBOSE) this.log('CONNECT', 'DB Connected');
 
+        this.retries = 0; // Reset retries on successful connection
         return this.pool;
       } catch (err: any) {
         this.retries++;
@@ -49,31 +63,51 @@ export default class MariaDB extends BaseDB {
         }
 
         this.log('INFO', `Retrying again in ${RETRY_DELAY / 1000}s...`);
-        // Simple delay without setTimeout dependency
-        await new Promise(res => {
-          let count = 0;
-          const interval = () => {
-            count++;
-            if (count >= RETRY_DELAY) {
-              res(undefined);
-            } else {
-              // Use a simple loop delay
-              for (let i = 0; i < 1000000; i++) {
-                // Simple CPU delay
-              }
-              interval();
-            }
-          };
-          interval();
-        });
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       }
     }
 
     return null;
   }
 
+  private setupPoolEvents(): void {
+    if (!this.pool) return;
+
+    this.pool.on('connection', connection => {
+      if (env.DB_VERBOSE) this.log('POOL', `Nova conexão estabelecida: ${connection.threadId}`);
+    });
+
+    // this.pool.on('error', (err) => {
+    //   this.log('ERROR', `Erro no pool: ${err.message}`);
+    // });
+
+    // this.pool.on('close', () => {
+    //   this.log('INFO', 'Pool foi fechado');
+    // });
+  }
+
+  private isPoolClosed(): boolean {
+    return !this.pool || (this.pool as any)._closed === true;
+  }
+
+  private async ensureConnection(): Promise<void> {
+    if (this.isPoolClosed()) {
+      this.log('INFO', 'Pool fechado, reconectando...');
+      await this.internalConnect();
+    }
+  }
+
   public async close(): Promise<void> {
-    this.pool?.end();
+    if (this.pool && !this.isPoolClosed()) {
+      try {
+        await this.pool.end();
+        if (env.DB_VERBOSE) this.log('CLOSE', 'Pool fechado com sucesso');
+      } catch (err: any) {
+        this.log('ERROR', `Erro ao fechar pool: ${err.message}`);
+      } finally {
+        this.pool = undefined;
+      }
+    }
   }
 
   protected async query(args: {
@@ -82,21 +116,33 @@ export default class MariaDB extends BaseDB {
     verboseHeader: string;
     transaction?: Connection;
   }): Promise<RowDataPacket[] | null> {
+    let connection: PoolConnection | undefined;
+
     try {
+      await this.ensureConnection();
       if (!this.pool) throw new DBNotConnectedError();
+
       this.log(args.verboseHeader, args.sql);
 
-      const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+      if (args.transaction) {
+        // Para transações, usar a conexão passada diretamente
+        const result = await args.transaction.query<RowDataPacket[]>(args.sql, args.values);
+        return !result ? null : result[0];
+      } else {
+        // Para queries normais, obter conexão do pool
+        connection = await this.pool.getConnection();
+        if (!connection) throw new DBNotConnectedError();
 
-      if (!connection) throw new DBNotConnectedError();
-
-      const result = await connection.query<RowDataPacket[]>(args.sql, args.values);
-
-      if (!args.transaction) connection.destroy();
-
-      return !result ? null : result[0];
+        const result = await connection.query<RowDataPacket[]>(args.sql, args.values);
+        return !result ? null : result[0];
+      }
     } catch (err: any) {
       throw new DBError(err.message);
+    } finally {
+      // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
+      if (connection && !args.transaction) {
+        connection.release();
+      }
     }
   }
 
@@ -106,22 +152,33 @@ export default class MariaDB extends BaseDB {
     verboseHeader: string;
     transaction?: Connection;
   }): Promise<ResultSetHeader> {
+    let connection: PoolConnection | undefined;
+
     try {
+      await this.ensureConnection();
       if (!this.pool) throw new DBNotConnectedError();
 
       this.log(args.verboseHeader, args.command);
 
-      const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+      if (args.transaction) {
+        // Para transações, usar a conexão passada diretamente
+        const [result] = await args.transaction.execute<ResultSetHeader>(args.command, args.values);
+        return result ? result : ({} as ResultSetHeader);
+      } else {
+        // Para comandos normais, obter conexão do pool
+        connection = await this.pool.getConnection();
+        if (!connection) throw new DBNotConnectedError();
 
-      if (!connection) throw new DBNotConnectedError();
-
-      const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
-
-      if (!args.transaction) connection.destroy();
-
-      return result ? result : ({} as ResultSetHeader);
+        const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
+        return result ? result : ({} as ResultSetHeader);
+      }
     } catch (err: any) {
       throw new DBError(err.message);
+    } finally {
+      // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
+      if (connection && !args.transaction) {
+        connection.release();
+      }
     }
   }
 
@@ -231,14 +288,17 @@ export default class MariaDB extends BaseDB {
   }
 
   public async startTransaction(): Promise<Connection> {
+    await this.ensureConnection();
     if (!this.pool) throw new DBNotConnectedError();
+
     this.log('STARTTRANSACTION', '');
 
     try {
-      const connection = await this.pool.getConnection();
+      const connection = (await this.pool.getConnection()) as PoolConnection;
       await connection.beginTransaction();
 
-      return connection;
+      // Retorna a conexão como Connection para compatibilidade
+      return connection as Connection;
     } catch (err: any) {
       throw new DBError(err.message);
     }
@@ -253,8 +313,8 @@ export default class MariaDB extends BaseDB {
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
-      // Sempre libera a conexão após commit
-      transaction.destroy();
+      // ✅ CORREÇÃO: Cast para PoolConnection para acessar release()
+      (transaction as PoolConnection).release();
     }
   }
 
@@ -267,8 +327,8 @@ export default class MariaDB extends BaseDB {
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
-      // Sempre libera a conexão após rollback
-      transaction.destroy();
+      // ✅ CORREÇÃO: Cast para PoolConnection para acessar release()
+      (transaction as PoolConnection).release();
     }
   }
 
