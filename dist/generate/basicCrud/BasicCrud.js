@@ -593,17 +593,15 @@ class BasicCrud {
             throw new db_not_connected_error_1.DBNotConnectedError();
         if (!this.metadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
-        if (!column.isNullable && data[column.columnName] === undefined && !column.autoIncrement) {
-            if (!column.primaryKey || column.defaultValue === undefined || column.defaultValue === null) {
-                //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
-                //     data[column.columnName] =
-                //       column.dataType === 'char' || column.dataType === 'varchar'
-                //         ? (column.defaultValue as string).replace(/[']/g, '')
-                //         : column.defaultValue;
-                //   }
-                // } else if (column.primaryKey && operation !== Operation.UPDATE) {
-                throw new Error('fieldNotSent: ' + column.columnName); // TODO
-            }
+        if (!column.isNullable && data[column.columnName] === undefined && !column.autoIncrement && !column.defaultValue) {
+            //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
+            //     data[column.columnName] =
+            //       column.dataType === 'char' || column.dataType === 'varchar'
+            //         ? (column.defaultValue as string).replace(/[']/g, '')
+            //         : column.defaultValue;
+            //   }
+            // } else if (column.primaryKey && operation !== Operation.UPDATE) {
+            throw new Error('fieldNotSent: ' + column.columnName); // TODO
         }
         // Verify the field size
         if (data[column.columnName] &&
