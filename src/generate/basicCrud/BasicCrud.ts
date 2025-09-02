@@ -105,9 +105,9 @@ export class BasicCrud {
 
             if (!column) throw new InvalidMetadataError();
 
-            if (!column.primaryKey || !column.autoIncrement) {
+            if (!column.primaryKey || !column.autoIncrement || data[key] !== undefined || !column.defaultValue) {
               fields.push(key);
-              values.push(data[key] !== undefined ? data[key] : column.defaultValue ? column.defaultValue : null);
+              values.push(data[key]);
               params.push(this.isMariaDB ? '?' : `$${idx}`); // Different param syntax for PostgreSQL
               idx++;
             }
