@@ -751,16 +751,16 @@ export class BasicCrud {
     if (!this.metadata) throw new DBMetadataNotLoadedError();
 
     if (!column.isNullable && !data[column.columnName] && !column.autoIncrement) {
-      if (column.defaultValue) {
-        if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
-          data[column.columnName] =
-            column.dataType === 'char' || column.dataType === 'varchar'
-              ? (column.defaultValue as string).replace(/[']/g, '')
-              : column.defaultValue;
-        }
-      } else if (column.primaryKey && operation !== Operation.UPDATE) {
-        throw new Error('fieldNotSent: ' + column.columnName); // TODO
-      }
+      // if (column.defaultValue) {
+      //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
+      //     data[column.columnName] =
+      //       column.dataType === 'char' || column.dataType === 'varchar'
+      //         ? (column.defaultValue as string).replace(/[']/g, '')
+      //         : column.defaultValue;
+      //   }
+      // } else if (column.primaryKey && operation !== Operation.UPDATE) {
+      throw new Error('fieldNotSent: ' + column.columnName); // TODO
+      // }
     }
 
     // Verify the field size
