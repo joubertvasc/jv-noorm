@@ -593,8 +593,8 @@ class BasicCrud {
             throw new db_not_connected_error_1.DBNotConnectedError();
         if (!this.metadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
-        if (!column.isNullable && !data[column.columnName] && !column.autoIncrement) {
-            if (!column.primaryKey || !column.defaultValue) {
+        if (!column.isNullable && data[column.columnName] === undefined && !column.autoIncrement) {
+            if (!column.primaryKey || column.defaultValue === undefined || column.defaultValue === null) {
                 //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
                 //     data[column.columnName] =
                 //       column.dataType === 'char' || column.dataType === 'varchar'
