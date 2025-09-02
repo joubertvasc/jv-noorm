@@ -86,7 +86,7 @@ class BasicCrud {
                         }
                         if (!column)
                             throw new invalid_metadata_error_1.InvalidMetadataError();
-                        if (!column.primaryKey || !column.autoIncrement || data[key] !== undefined || !column.defaultValue) {
+                        if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
                             fields.push(key);
                             values.push(data[key]);
                             params.push(this.isMariaDB ? '?' : `$${idx}`); // Different param syntax for PostgreSQL
@@ -160,7 +160,7 @@ class BasicCrud {
                         }
                         if (!column)
                             throw new invalid_metadata_error_1.InvalidMetadataError(`Column ${key} does not exists on table ${this.tableName}`);
-                        if (!column.primaryKey || !column.autoIncrement) {
+                        if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
                             fields.push(key);
                             values.push(data[key]);
                         }
