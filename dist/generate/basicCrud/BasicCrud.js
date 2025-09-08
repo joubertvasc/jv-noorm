@@ -395,19 +395,26 @@ class BasicCrud {
             throw new db_not_connected_error_1.DBNotConnectedError();
         if (!this.metadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+        const columns = params?.includeAuditingFields
+            ? this.metadata.columns
+            : this.metadata.columns
+                .map(c => {
+                if (c.columnName !== this.createdAtColumn &&
+                    c.columnName !== this.updatedAtColumn &&
+                    c.columnName !== this.deletedAtColumn) {
+                    return c;
+                }
+                return undefined;
+            })
+                .filter((c) => c !== undefined);
         let sql = `SELECT `;
         if (params?.fields) {
             sql += params.fields;
         }
         else {
-            for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
-                const columnName = this.metadata.columns[columnIdx].columnName;
-                if (params?.includeAuditingFields ||
-                    (columnName !== this.createdAtColumn &&
-                        columnName !== this.updatedAtColumn &&
-                        columnName !== this.deletedAtColumn)) {
-                    sql += `${columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
-                }
+            for (let columnIdx = 0; columnIdx < columns.length; columnIdx++) {
+                const columnName = columns[columnIdx].columnName;
+                sql += `${columnName}${columnIdx < columns.length - 1 ? ', ' : ''}`;
             }
         }
         sql += '\n';
