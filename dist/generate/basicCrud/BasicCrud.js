@@ -396,8 +396,13 @@ class BasicCrud {
         if (!this.metadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
         let sql = `SELECT `;
-        for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
-            sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+        if (params?.fields) {
+            sql += params.fields;
+        }
+        else {
+            for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
+                sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+            }
         }
         sql += '\n';
         sql += `  FROM ${this.tableName}\n`;

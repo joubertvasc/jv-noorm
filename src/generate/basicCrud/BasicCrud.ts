@@ -478,6 +478,7 @@ export class BasicCrud {
 
   public async list(params?: {
     key?: any;
+    fields?: string;
     filters?: Record<string, any>;
     orderBy?: string;
     orderDirection?: string;
@@ -491,8 +492,13 @@ export class BasicCrud {
     if (!this.metadata) throw new DBMetadataNotLoadedError();
 
     let sql = `SELECT `;
-    for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
-      sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+
+    if (params?.fields) {
+      sql += params.fields;
+    } else {
+      for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
+        sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+      }
     }
     sql += '\n';
     sql += `  FROM ${this.tableName}\n`;

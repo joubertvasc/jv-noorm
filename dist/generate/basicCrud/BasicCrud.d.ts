@@ -57,6 +57,7 @@ export declare class BasicCrud {
     }): Promise<any>;
     list(params?: {
         key?: any;
+        fields?: string;
         filters?: Record<string, any>;
         orderBy?: string;
         orderDirection?: string;
