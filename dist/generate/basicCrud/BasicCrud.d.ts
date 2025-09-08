@@ -60,6 +60,7 @@ export declare class BasicCrud {
         filters?: Record<string, any>;
         orderBy?: string;
         orderDirection?: string;
+        page?: number;
         offset?: number;
         limit?: number;
         softDeleted?: boolean;

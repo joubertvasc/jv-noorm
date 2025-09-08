@@ -435,6 +435,9 @@ class BasicCrud {
             sql += `${conditionIdx === 0 ? 'WHERE' : '  AND'} ${conditions[conditionIdx]}\n`;
         }
         if (params && params.orderBy) {
+            if (!params.offset && params.page && params.page > 0 && params.limit) {
+                params.offset = (params.page - 1) * params.limit;
+            }
             sql += ` ORDER BY ${params.orderBy} ${params.orderDirection || ' ASC'} 
       ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? ', ' : ''}${params.limit || ''}` : ''}`;
         }
