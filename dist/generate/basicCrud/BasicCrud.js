@@ -428,7 +428,7 @@ class BasicCrud {
                 });
             });
         }
-        if (this.deletedAtColumn && (!params || (params && !params.softDeleted))) {
+        if (this.deletedAtColumn && params?.softDeleted === true) {
             conditions.push(this.deletedAtColumn + ` IS NULL`);
         }
         for (let conditionIdx = 0; conditionIdx < conditions.length; conditionIdx++) {
@@ -473,7 +473,7 @@ class BasicCrud {
                 });
             });
         }
-        if (this.deletedAtColumn && (!params || (params && !params.softDeleted))) {
+        if (this.deletedAtColumn && params?.softDeleted === true) {
             conditions.push(this.deletedAtColumn + ` IS NULL`);
         }
         for (let conditionIdx = 0; conditionIdx < conditions.length; conditionIdx++) {

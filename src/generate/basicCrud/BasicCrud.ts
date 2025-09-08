@@ -526,7 +526,7 @@ export class BasicCrud {
       });
     }
 
-    if (this.deletedAtColumn && (!params || (params && !params.softDeleted))) {
+    if (this.deletedAtColumn && params?.softDeleted === true) {
       conditions.push(this.deletedAtColumn + ` IS NULL`);
     }
 
@@ -584,7 +584,7 @@ export class BasicCrud {
       });
     }
 
-    if (this.deletedAtColumn && (!params || (params && !params.softDeleted))) {
+    if (this.deletedAtColumn && params?.softDeleted === true) {
       conditions.push(this.deletedAtColumn + ` IS NULL`);
     }
 
