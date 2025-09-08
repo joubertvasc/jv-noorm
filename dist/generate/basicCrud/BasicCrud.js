@@ -401,7 +401,13 @@ class BasicCrud {
         }
         else {
             for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
-                sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+                const columnName = this.metadata.columns[columnIdx].columnName;
+                if (params?.includeAuditingFields ||
+                    (columnName !== this.createdAtColumn &&
+                        columnName !== this.updatedAtColumn &&
+                        columnName !== this.deletedAtColumn)) {
+                    sql += `${columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+                }
             }
         }
         sql += '\n';
@@ -618,7 +624,7 @@ class BasicCrud {
             throw new constraint_error_1.ConstraintError('fieldSizeExcedeed field: ' + column.columnName + ' maxSize: ' + String(column.length));
         }
         // Verify parent constraint
-        if (column.referencedTable && column.referencedColumn) {
+        if (data[column.columnName] && column.referencedTable && column.referencedColumn) {
             const exists = await this.db.queryRow({
                 sql: `SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS recordExists
                 FROM ${column.referencedTable}

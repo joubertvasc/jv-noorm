@@ -486,6 +486,7 @@ export class BasicCrud {
     offset?: number;
     limit?: number;
     softDeleted?: boolean;
+    includeAuditingFields?: boolean;
     transaction?: Connection | PoolClient;
   }): Promise<any> {
     if (!this.db) throw new DBNotConnectedError();
@@ -497,7 +498,15 @@ export class BasicCrud {
       sql += params.fields;
     } else {
       for (let columnIdx = 0; columnIdx < this.metadata.columns.length; columnIdx++) {
-        sql += `${this.metadata.columns[columnIdx].columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+        const columnName = this.metadata.columns[columnIdx].columnName;
+        if (
+          params?.includeAuditingFields ||
+          (columnName !== this.createdAtColumn &&
+            columnName !== this.updatedAtColumn &&
+            columnName !== this.deletedAtColumn)
+        ) {
+          sql += `${columnName}${columnIdx < this.metadata.columns.length - 1 ? ', ' : ''}`;
+        }
       }
     }
     sql += '\n';
@@ -782,7 +791,7 @@ export class BasicCrud {
     }
 
     // Verify parent constraint
-    if (column.referencedTable && column.referencedColumn) {
+    if (data[column.columnName] && column.referencedTable && column.referencedColumn) {
       const exists = await this.db.queryRow({
         sql: `SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS recordExists
                 FROM ${column.referencedTable}

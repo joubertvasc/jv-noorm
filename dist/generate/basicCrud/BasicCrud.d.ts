@@ -65,6 +65,7 @@ export declare class BasicCrud {
         offset?: number;
         limit?: number;
         softDeleted?: boolean;
+        includeAuditingFields?: boolean;
         transaction?: Connection | PoolClient;
     }): Promise<any>;
     dropdownList(params: {
