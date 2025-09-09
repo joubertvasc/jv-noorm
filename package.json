@@ -1,6 +1,6 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.44",
+  "version": "0.0.45",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
@@ -43,6 +43,11 @@
       "import": "./dist/db/BaseDB.js",
       "require": "./dist/db/BaseDB.js",
       "types": "./dist/db/BaseDB.d.ts"
+    },
+    "./ConnectionPool": {
+      "import": "./dist/db/ConnectionPool.js",
+      "require": "./dist/db/ConnectionPool.js",
+      "types": "./dist/db/ConnectionPool.d.ts"
     },
     "./MariaDB": {
       "import": "./dist/db/mariadb/MariaDB.js",

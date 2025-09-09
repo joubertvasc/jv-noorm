@@ -7,7 +7,6 @@
  */
 
 import { Pool, PoolClient } from 'pg';
-import { Connection } from 'mysql2/promise';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
@@ -17,6 +16,7 @@ import { env } from '../../env';
 import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defined-error';
 import { DBError } from '../../shared/errors/db-error';
 import { initPool, closePool } from './pool';
+import { ConnectionPool } from '../ConnectionPool';
 
 export class PostgreSQL extends BaseDB {
   private pgConnection: Pool;
@@ -61,7 +61,7 @@ export class PostgreSQL extends BaseDB {
     sql: string;
     values?: any;
     verboseHeader: string;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
 
@@ -81,7 +81,7 @@ export class PostgreSQL extends BaseDB {
     command: string;
     values: any;
     verboseHeader: string;
-    transaction?: PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<any> {
     const client = (args.transaction ? args.transaction : await this.pgConnection.connect()) as PoolClient;
 
@@ -107,7 +107,7 @@ export class PostgreSQL extends BaseDB {
     }
   }
 
-  public async queryRow(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any | null> {
+  public async queryRow(args: { sql: string; values?: any; transaction?: ConnectionPool }): Promise<any | null> {
     const result = await this.query({
       sql: args.sql,
       values: args.values,
@@ -118,7 +118,7 @@ export class PostgreSQL extends BaseDB {
     return result.length > 0 ? result[0] : [];
   }
 
-  public async queryRows(args: { sql: string; values?: any; transaction?: PoolClient }): Promise<any[] | null> {
+  public async queryRows(args: { sql: string; values?: any; transaction?: ConnectionPool }): Promise<any[] | null> {
     const result = await this.query({
       sql: args.sql,
       values: args.values,
@@ -129,7 +129,7 @@ export class PostgreSQL extends BaseDB {
     return result;
   }
 
-  public async insert(args: { command: string; values?: any; transaction?: PoolClient }): Promise<IDBInsertResult> {
+  public async insert(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<IDBInsertResult> {
     const result = await this.execCommand({
       command: args.command,
       values: args.values,
@@ -143,7 +143,7 @@ export class PostgreSQL extends BaseDB {
     };
   }
 
-  public async update(args: { command: string; values?: any; transaction?: PoolClient }): Promise<IDBUpdateResult> {
+  public async update(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<IDBUpdateResult> {
     const result = await this.execCommand({
       command: args.command,
       values: args.values,
@@ -173,7 +173,7 @@ export class PostgreSQL extends BaseDB {
     };
   }
 
-  public async exec(args: { command: string; values?: any; transaction?: PoolClient }): Promise<any> {
+  public async exec(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<any> {
     await this.execCommand({
       command: args.command,
       values: args.values,
@@ -182,7 +182,7 @@ export class PostgreSQL extends BaseDB {
     });
   }
 
-  public async startTransaction(): Promise<PoolClient> {
+  public async startTransaction(): Promise<ConnectionPool> {
     const client: PoolClient = await this.pgConnection.connect();
     this.log('STARTTRANSACTION', '');
     try {
@@ -195,27 +195,27 @@ export class PostgreSQL extends BaseDB {
     }
   }
 
-  public async commit(transaction: PoolClient): Promise<void> {
+  public async commit(transaction: ConnectionPool): Promise<void> {
     try {
       this.log('COMMIT', '');
-      await transaction.query('COMMIT');
+      await (transaction as PoolClient).query('COMMIT');
     } finally {
       // Sempre libera a conexão após commit
       transaction.release();
     }
   }
 
-  public async rollback(transaction: PoolClient): Promise<void> {
+  public async rollback(transaction: ConnectionPool): Promise<void> {
     try {
       this.log('ROLLBACK', '');
-      await transaction.query('ROLLBACK');
+      await (transaction as PoolClient).query('ROLLBACK');
     } finally {
       // Sempre libera a conexão após rollback
       transaction.release();
     }
   }
 
-  protected async getDBMetadata(transaction?: PoolClient): Promise<ITableMetaDataResultSet[]> {
+  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]> {
     const result = await this.queryRows({
       sql: `
         WITH table_info AS (

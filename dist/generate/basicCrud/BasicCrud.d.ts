@@ -8,11 +8,10 @@
 import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
 import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { BaseDB } from '../../db/BaseDB';
-import { Connection } from 'mysql2/promise';
-import { PoolClient } from 'pg';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
 import { Operation } from '../../enum/operations';
 import { IDropDown } from '../interfaces/IDropDown';
+import { ConnectionPool } from '../../db/ConnectionPool';
 export interface IPrimaryKeyQuery {
     cmd: string;
     values: any[];
@@ -36,16 +35,16 @@ export declare class BasicCrud {
     });
     create(params: {
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     update(params: {
         key: any;
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     delete(params: {
         key: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
         options?: IDeleteOptions;
     }): Promise<boolean>;
     private handleHardDelete;
@@ -53,7 +52,7 @@ export declare class BasicCrud {
     private deleteRecursively;
     get(params: {
         key: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     list(params?: {
         key?: any;
@@ -66,7 +65,7 @@ export declare class BasicCrud {
         limit?: number;
         softDeleted?: boolean;
         includeAuditingFields?: boolean;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     dropdownList(params: {
         filters?: Record<string, any>;
@@ -75,41 +74,41 @@ export declare class BasicCrud {
         offset?: number;
         limit?: number;
         softDeleted?: boolean;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDropDown[]>;
     hookBeforeSave(params: {
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     hookAfterSave(params: {
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<Record<string, any>>;
     hookBeforeCreate(params: {
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<Record<string, any>>;
     hookAfterCreate(params: {
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<Record<string, any>>;
     hookBeforeUpdate(params: {
         key: any;
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<Record<string, any>>;
     hookAfterUpdate(params: {
         key: any;
         data: Record<string, any>;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<Record<string, any>>;
     hookBeforeDelete(params: {
         key: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<boolean>;
     hookAfterDelete(params: {
         key: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<boolean>;
     verifyRow(key: any, softDeleted?: boolean): Promise<boolean>;
     mountTableWherePrimaryKey(key: any, softDeleted?: boolean): IPrimaryKeyQuery;

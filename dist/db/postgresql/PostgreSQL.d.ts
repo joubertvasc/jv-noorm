@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { PoolClient } from 'pg';
-import { Connection } from 'mysql2/promise';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
 import { BaseDB } from '../../db/BaseDB';
+import { ConnectionPool } from '../ConnectionPool';
 export declare class PostgreSQL extends BaseDB {
     private pgConnection;
     constructor();
@@ -21,33 +21,33 @@ export declare class PostgreSQL extends BaseDB {
         sql: string;
         values?: any;
         verboseHeader: string;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     protected execCommand(args: {
         command: string;
         values: any;
         verboseHeader: string;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     queryRow(args: {
         sql: string;
         values?: any;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any | null>;
     queryRows(args: {
         sql: string;
         values?: any;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any[] | null>;
     insert(args: {
         command: string;
         values?: any;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBInsertResult>;
     update(args: {
         command: string;
         values?: any;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBUpdateResult>;
     protected internalDelete(args: {
         command: string;
@@ -57,10 +57,10 @@ export declare class PostgreSQL extends BaseDB {
     exec(args: {
         command: string;
         values?: any;
-        transaction?: PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
-    startTransaction(): Promise<PoolClient>;
-    commit(transaction: PoolClient): Promise<void>;
-    rollback(transaction: PoolClient): Promise<void>;
-    protected getDBMetadata(transaction?: PoolClient): Promise<ITableMetaDataResultSet[]>;
+    startTransaction(): Promise<ConnectionPool>;
+    commit(transaction: ConnectionPool): Promise<void>;
+    rollback(transaction: ConnectionPool): Promise<void>;
+    protected getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
 }

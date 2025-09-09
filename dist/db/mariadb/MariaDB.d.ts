@@ -5,12 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { RowDataPacket, ResultSetHeader, Pool, Connection } from 'mysql2/promise';
+import { RowDataPacket, ResultSetHeader, Pool } from 'mysql2/promise';
 import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
 import { BaseDB } from '../BaseDB';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
+import { ConnectionPool } from '../ConnectionPool';
 export default class MariaDB extends BaseDB {
     private pool;
     retries: number;
@@ -23,46 +24,46 @@ export default class MariaDB extends BaseDB {
         sql: string;
         values: any;
         verboseHeader: string;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<RowDataPacket[] | null>;
     protected execCommand(args: {
         command: string;
         values: any;
         verboseHeader: string;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<ResultSetHeader>;
     queryRow(args: {
         sql: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<RowDataPacket | null>;
     queryRows(args: {
         sql: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<RowDataPacket[] | null>;
     insert(args: {
         command: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<IDBInsertResult>;
     update(args: {
         command: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<IDBUpdateResult>;
     protected internalDelete(args: {
         command: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<IDBDeleteResult>;
     exec(args: {
         command: string;
         values?: any;
-        transaction?: Connection;
+        transaction?: ConnectionPool;
     }): Promise<ResultSetHeader>;
-    startTransaction(): Promise<Connection>;
-    commit(transaction: Connection): Promise<void>;
-    rollback(transaction: Connection): Promise<void>;
-    protected getDBMetadata(transaction?: Connection): Promise<ITableMetaDataResultSet[]>;
+    startTransaction(): Promise<ConnectionPool>;
+    commit(transaction: ConnectionPool): Promise<void>;
+    rollback(transaction: ConnectionPool): Promise<void>;
+    protected getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
 }

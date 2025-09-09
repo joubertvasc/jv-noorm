@@ -5,14 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { Connection } from 'mysql2/promise';
-import { PoolClient } from 'pg';
 import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
 import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
+import { ConnectionPool } from './ConnectionPool';
 export declare abstract class BaseDB {
     private softDelete;
     private metadata;
@@ -26,55 +25,55 @@ export declare abstract class BaseDB {
         sql: string;
         values: any;
         verboseHeader: string;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     protected abstract execCommand(args: {
         command: string;
         values: any;
         verboseHeader: string;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
     abstract queryRow(args: {
         sql: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any | null>;
     abstract queryRows(args: {
         sql: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any[] | null>;
     abstract insert(args: {
         command: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBInsertResult>;
     abstract update(args: {
         command: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBUpdateResult>;
     protected abstract internalDelete(args: {
         command: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBDeleteResult>;
     abstract exec(args: {
         command: string;
         values?: any;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<any>;
-    abstract startTransaction(): Promise<Connection | PoolClient>;
-    beginTransaction(): Promise<Connection | PoolClient>;
-    abstract commit(transaction: Connection | PoolClient): Promise<void>;
-    abstract rollback(transaction: Connection | PoolClient): Promise<void>;
-    protected abstract getDBMetadata(transaction?: Connection | PoolClient): Promise<ITableMetaDataResultSet[]>;
+    abstract startTransaction(): Promise<ConnectionPool>;
+    beginTransaction(): Promise<ConnectionPool>;
+    abstract commit(transaction: ConnectionPool): Promise<void>;
+    abstract rollback(transaction: ConnectionPool): Promise<void>;
+    protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
     updateMetadata(): Promise<void>;
     delete(args: {
         command: string;
         values?: any;
         options?: IDeleteOptions;
-        transaction?: Connection | PoolClient;
+        transaction?: ConnectionPool;
     }): Promise<IDBDeleteResult>;
     getTableMetadata(tableName: string): ITableMetaDataResultSet | null;
     findCreatedAtColumn(table: string): string | null;

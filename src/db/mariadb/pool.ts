@@ -18,9 +18,6 @@ export function initPool(config: PoolOptions): Pool {
       ...config,
       waitForConnections: true,
       queueLimit: 0,
-      // reconnect: true,
-      // acquireTimeout: 60000,
-      // timeout: 60000,
       idleTimeout: 300000,
     });
 

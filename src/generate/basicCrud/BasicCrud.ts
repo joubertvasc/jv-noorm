@@ -26,6 +26,7 @@ import { ConstraintError } from '../../shared/errors/constraint-error';
 import { Operation } from '../../enum/operations';
 import { DeleteRule } from '../../enum/deleteRule';
 import { IDropDown } from '../interfaces/IDropDown';
+import { ConnectionPool } from '../../db/ConnectionPool';
 
 export interface IPrimaryKeyQuery {
   cmd: string;
@@ -77,7 +78,7 @@ export class BasicCrud {
     }
   }
 
-  public async create(params: { data: Record<string, any>; transaction?: Connection | PoolClient }): Promise<any> {
+  public async create(params: { data: Record<string, any>; transaction?: ConnectionPool }): Promise<any> {
     let { data } = params;
     const { transaction } = params;
 
@@ -147,11 +148,7 @@ export class BasicCrud {
     }
   }
 
-  public async update(params: {
-    key: any;
-    data: Record<string, any>;
-    transaction?: Connection | PoolClient;
-  }): Promise<any> {
+  public async update(params: { key: any; data: Record<string, any>; transaction?: ConnectionPool }): Promise<any> {
     let { data } = params;
     const { key, transaction } = params;
 
@@ -230,11 +227,7 @@ export class BasicCrud {
     }
   }
 
-  public async delete(params: {
-    key: any;
-    transaction?: Connection | PoolClient;
-    options?: IDeleteOptions;
-  }): Promise<boolean> {
+  public async delete(params: { key: any; transaction?: ConnectionPool; options?: IDeleteOptions }): Promise<boolean> {
     let { key, transaction, options } = params;
 
     if (!this.db) throw new DBNotConnectedError();
@@ -307,7 +300,7 @@ export class BasicCrud {
   private async handleHardDelete(
     constraints: ITableConstraintsResultSet[],
     primaryKeyInfo: IPrimaryKeyQuery,
-    transaction?: Connection | PoolClient,
+    transaction?: ConnectionPool,
   ): Promise<boolean> {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
@@ -375,7 +368,7 @@ export class BasicCrud {
   private async deleteRecursively(params: {
     tableName: string;
     key: any;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
     options?: IDeleteOptions;
   }): Promise<boolean> {
     if (!this.db) throw new DBNotConnectedError();
@@ -461,7 +454,7 @@ export class BasicCrud {
     return true;
   }
 
-  public async get(params: { key: any; transaction?: Connection | PoolClient }): Promise<any> {
+  public async get(params: { key: any; transaction?: ConnectionPool }): Promise<any> {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
 
@@ -487,7 +480,7 @@ export class BasicCrud {
     limit?: number;
     softDeleted?: boolean;
     includeAuditingFields?: boolean;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<any> {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
@@ -580,7 +573,7 @@ export class BasicCrud {
     offset?: number;
     limit?: number;
     softDeleted?: boolean;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<IDropDown[]> {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
@@ -627,30 +620,27 @@ export class BasicCrud {
   }
 
   // Hooks are here to be overhide if overrided class need more control
-  public async hookBeforeSave(params: {
-    data: Record<string, any>;
-    transaction?: Connection | PoolClient;
-  }): Promise<any> {
+  public async hookBeforeSave(params: { data: Record<string, any>; transaction?: ConnectionPool }): Promise<any> {
     return params.data;
   }
 
   public async hookAfterSave(params: {
     data: Record<string, any>;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<Record<string, any>> {
     return params.data;
   }
 
   public async hookBeforeCreate(params: {
     data: Record<string, any>;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<Record<string, any>> {
     return params.data;
   }
 
   public async hookAfterCreate(params: {
     data: Record<string, any>;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<Record<string, any>> {
     return params.data;
   }
@@ -658,7 +648,7 @@ export class BasicCrud {
   public async hookBeforeUpdate(params: {
     key: any;
     data: Record<string, any>;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<Record<string, any>> {
     return params.data;
   }
@@ -666,16 +656,16 @@ export class BasicCrud {
   public async hookAfterUpdate(params: {
     key: any;
     data: Record<string, any>;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<Record<string, any>> {
     return params.data;
   }
 
-  public async hookBeforeDelete(params: { key: any; transaction?: Connection | PoolClient }): Promise<boolean> {
+  public async hookBeforeDelete(params: { key: any; transaction?: ConnectionPool }): Promise<boolean> {
     return true;
   }
 
-  public async hookAfterDelete(params: { key: any; transaction?: Connection | PoolClient }): Promise<boolean> {
+  public async hookAfterDelete(params: { key: any; transaction?: ConnectionPool }): Promise<boolean> {
     return true;
   }
 

@@ -22,9 +22,6 @@ function initPool(config) {
             ...config,
             waitForConnections: true,
             queueLimit: 0,
-            // reconnect: true,
-            // acquireTimeout: 60000,
-            // timeout: 60000,
             idleTimeout: 300000,
         });
         if (env_1.env.DB_VERBOSE)

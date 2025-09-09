@@ -16,6 +16,7 @@ import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error'
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
+import { ConnectionPool } from '../ConnectionPool';
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
@@ -114,7 +115,7 @@ export default class MariaDB extends BaseDB {
     sql: string;
     values: any;
     verboseHeader: string;
-    transaction?: Connection;
+    transaction?: ConnectionPool;
   }): Promise<RowDataPacket[] | null> {
     let connection: PoolConnection | undefined;
 
@@ -126,7 +127,7 @@ export default class MariaDB extends BaseDB {
 
       if (args.transaction) {
         // Para transações, usar a conexão passada diretamente
-        const result = await args.transaction.query<RowDataPacket[]>(args.sql, args.values);
+        const result = await (args.transaction as PoolConnection).query<RowDataPacket[]>(args.sql, args.values);
         return !result ? null : result[0];
       } else {
         // Para queries normais, obter conexão do pool
@@ -150,9 +151,9 @@ export default class MariaDB extends BaseDB {
     command: string;
     values: any;
     verboseHeader: string;
-    transaction?: Connection;
+    transaction?: ConnectionPool;
   }): Promise<ResultSetHeader> {
-    let connection: PoolConnection | undefined;
+    let connection: ConnectionPool | undefined;
 
     try {
       await this.ensureConnection();
@@ -162,7 +163,7 @@ export default class MariaDB extends BaseDB {
 
       if (args.transaction) {
         // Para transações, usar a conexão passada diretamente
-        const [result] = await args.transaction.execute<ResultSetHeader>(args.command, args.values);
+        const [result] = await (args.transaction as PoolConnection).execute<ResultSetHeader>(args.command, args.values);
         return result ? result : ({} as ResultSetHeader);
       } else {
         // Para comandos normais, obter conexão do pool
@@ -182,7 +183,11 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  public async queryRow(args: { sql: string; values?: any; transaction?: Connection }): Promise<RowDataPacket | null> {
+  public async queryRow(args: {
+    sql: string;
+    values?: any;
+    transaction?: ConnectionPool;
+  }): Promise<RowDataPacket | null> {
     try {
       const rows = await this.query({
         sql: args.sql + ` LIMIT 1`,
@@ -202,7 +207,7 @@ export default class MariaDB extends BaseDB {
   public async queryRows(args: {
     sql: string;
     values?: any;
-    transaction?: Connection;
+    transaction?: ConnectionPool;
   }): Promise<RowDataPacket[] | null> {
     try {
       return await this.query({
@@ -216,7 +221,7 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  public async insert(args: { command: string; values?: any; transaction?: Connection }): Promise<IDBInsertResult> {
+  public async insert(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<IDBInsertResult> {
     try {
       const insertResult = await this.execCommand({
         command: args.command,
@@ -241,7 +246,7 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  public async update(args: { command: string; values?: any; transaction?: Connection }): Promise<IDBUpdateResult> {
+  public async update(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<IDBUpdateResult> {
     try {
       const updated = await this.execCommand({
         command: args.command,
@@ -261,7 +266,7 @@ export default class MariaDB extends BaseDB {
   protected async internalDelete(args: {
     command: string;
     values?: any;
-    transaction?: Connection;
+    transaction?: ConnectionPool;
   }): Promise<IDBDeleteResult> {
     const deleted = await this.execCommand({
       command: args.command,
@@ -274,7 +279,7 @@ export default class MariaDB extends BaseDB {
     };
   }
 
-  public async exec(args: { command: string; values?: any; transaction?: Connection }): Promise<ResultSetHeader> {
+  public async exec(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<ResultSetHeader> {
     try {
       return await this.execCommand({
         command: args.command,
@@ -287,7 +292,7 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  public async startTransaction(): Promise<Connection> {
+  public async startTransaction(): Promise<ConnectionPool> {
     await this.ensureConnection();
     if (!this.pool) throw new DBNotConnectedError();
 
@@ -298,18 +303,18 @@ export default class MariaDB extends BaseDB {
       await connection.beginTransaction();
 
       // Retorna a conexão como Connection para compatibilidade
-      return connection as Connection;
+      return connection as ConnectionPool;
     } catch (err: any) {
       throw new DBError(err.message);
     }
   }
 
-  public async commit(transaction: Connection): Promise<void> {
+  public async commit(transaction: ConnectionPool): Promise<void> {
     if (!this.pool) throw new DBNotConnectedError();
     this.log('COMMIT', '');
 
     try {
-      await transaction.commit();
+      await (transaction as PoolConnection).commit();
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
@@ -318,12 +323,12 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  public async rollback(transaction: Connection): Promise<void> {
+  public async rollback(transaction: ConnectionPool): Promise<void> {
     if (!this.pool) throw new DBNotConnectedError();
     this.log('ROLLBACK', '');
 
     try {
-      await transaction.rollback();
+      await (transaction as PoolConnection).rollback();
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
@@ -332,7 +337,7 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  protected async getDBMetadata(transaction?: Connection): Promise<ITableMetaDataResultSet[]> {
+  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]> {
     try {
       const tables = await this.queryRows({
         sql: `

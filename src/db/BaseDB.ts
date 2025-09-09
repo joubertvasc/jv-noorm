@@ -18,6 +18,7 @@ import { WrongDeleteStatementError } from '../shared/errors/wrong-delete-stateme
 import { DBError } from '../shared/errors/db-error';
 import { env } from '../env';
 import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
+import { ConnectionPool } from './ConnectionPool';
 
 export abstract class BaseDB {
   private softDelete = false;
@@ -47,50 +48,42 @@ export abstract class BaseDB {
     sql: string;
     values: any;
     verboseHeader: string;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<any>;
   protected abstract execCommand(args: {
     command: string;
     values: any;
     verboseHeader: string;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<any>;
 
-  public abstract queryRow(args: {
-    sql: string;
-    values?: any;
-    transaction?: Connection | PoolClient;
-  }): Promise<any | null>;
-  public abstract queryRows(args: {
-    sql: string;
-    values?: any;
-    transaction?: Connection | PoolClient;
-  }): Promise<any[] | null>;
+  public abstract queryRow(args: { sql: string; values?: any; transaction?: ConnectionPool }): Promise<any | null>;
+  public abstract queryRows(args: { sql: string; values?: any; transaction?: ConnectionPool }): Promise<any[] | null>;
   public abstract insert(args: {
     command: string;
     values?: any;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<IDBInsertResult>;
   public abstract update(args: {
     command: string;
     values?: any;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<IDBUpdateResult>;
   protected abstract internalDelete(args: {
     command: string;
     values?: any;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<IDBDeleteResult>;
-  public abstract exec(args: { command: string; values?: any; transaction?: Connection | PoolClient }): Promise<any>;
-  public abstract startTransaction(): Promise<Connection | PoolClient>;
+  public abstract exec(args: { command: string; values?: any; transaction?: ConnectionPool }): Promise<any>;
+  public abstract startTransaction(): Promise<ConnectionPool>;
 
-  public async beginTransaction(): Promise<Connection | PoolClient> {
+  public async beginTransaction(): Promise<ConnectionPool> {
     return this.startTransaction();
   }
 
-  public abstract commit(transaction: Connection | PoolClient): Promise<void>;
-  public abstract rollback(transaction: Connection | PoolClient): Promise<void>;
-  protected abstract getDBMetadata(transaction?: Connection | PoolClient): Promise<ITableMetaDataResultSet[]>;
+  public abstract commit(transaction: ConnectionPool): Promise<void>;
+  public abstract rollback(transaction: ConnectionPool): Promise<void>;
+  protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
 
   public async updateMetadata(): Promise<void> {
     this.metadata = await this.getDBMetadata();
@@ -100,7 +93,7 @@ export abstract class BaseDB {
     command: string;
     values?: any;
     options?: IDeleteOptions;
-    transaction?: Connection | PoolClient;
+    transaction?: ConnectionPool;
   }): Promise<IDBDeleteResult> {
     try {
       if ((this.isSoftDelete() || args.options?.softDelete === true) && args.options?.softDelete !== false) {
