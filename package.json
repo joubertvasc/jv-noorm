@@ -184,6 +184,11 @@
       "require": "./dist/db/interfaces/ILoggedUser.js",
       "types": "./dist/db/interfaces/ILoggedUser.d.ts"
     },
+    "./ICrudEvent": {
+      "import": "./dist/db/interfaces/ICrudEvent.js",
+      "require": "./dist/db/interfaces/ICrudEvent.js",
+      "types": "./dist/db/interfaces/ICrudEvent.d.ts"
+    },
     "./IColumnMetaDataResultSet": {
       "import": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
       "require": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
