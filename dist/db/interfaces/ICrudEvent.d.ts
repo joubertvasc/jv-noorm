@@ -8,6 +8,8 @@
 import { ILoggedUser } from './ILoggedUser';
 export interface ICrudEvent {
     command: string;
+    table?: string;
+    columns?: string[];
     values: any;
     inTransaction: boolean;
     result: any;

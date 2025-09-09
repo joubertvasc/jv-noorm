@@ -31,10 +31,6 @@ class MariaDB extends BaseDB_1.BaseDB {
                     host: env_1.env.DB_HOST,
                     port: env_1.env.DB_PORT,
                     connectionLimit: env_1.env.DB_MAX_POOL,
-                    // Configurações adicionais para estabilidade
-                    // acquireTimeout: 60000,
-                    // timeout: 60000,
-                    // reconnect: true,
                     idleTimeout: 300000,
                 });
                 // Configurar eventos do pool para debug
@@ -98,19 +94,11 @@ class MariaDB extends BaseDB_1.BaseDB {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.sql);
-            if (args.transaction) {
-                // Para transações, usar a conexão passada diretamente
-                const result = await args.transaction.query(args.sql, args.values);
-                return !result ? null : result[0];
-            }
-            else {
-                // Para queries normais, obter conexão do pool
-                connection = await this.pool.getConnection();
-                if (!connection)
-                    throw new db_not_connected_error_1.DBNotConnectedError();
-                const result = await connection.query(args.sql, args.values);
-                return !result ? null : result[0];
-            }
+            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+            if (!connection)
+                throw new db_not_connected_error_1.DBNotConnectedError();
+            const result = await connection.query(args.sql, args.values);
+            return !result ? null : result[0];
         }
         catch (err) {
             throw new db_error_1.DBError(err.message);
@@ -130,19 +118,11 @@ class MariaDB extends BaseDB_1.BaseDB {
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.command);
             let response;
-            if (args.transaction) {
-                // Para transações, usar a conexão passada diretamente
-                const [result] = await args.transaction.execute(args.command, args.values);
-                response = result ? result : {};
-            }
-            else {
-                // Para comandos normais, obter conexão do pool
-                connection = await this.pool.getConnection();
-                if (!connection)
-                    throw new db_not_connected_error_1.DBNotConnectedError();
-                const [result] = await connection.execute(args.command, args.values);
-                response = result ? result : {};
-            }
+            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+            if (!connection)
+                throw new db_not_connected_error_1.DBNotConnectedError();
+            const [result] = await connection.execute(args.command, args.values);
+            response = result ? result : {};
             this.emitCrudEvent(args.verboseHeader, {
                 command: args.command,
                 values: args.values,

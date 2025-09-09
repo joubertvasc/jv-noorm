@@ -21,6 +21,7 @@ import { WrongDeleteStatementError } from '../shared/errors/wrong-delete-stateme
 import { DBError } from '../shared/errors/db-error';
 import { ILoggedUser } from './interfaces/ILoggedUser';
 import { ICrudEvent } from './interfaces/ICrudEvent';
+import { Parser } from 'node-sql-parser';
 
 export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
@@ -215,6 +216,21 @@ export abstract class BaseDB extends EventEmitter {
   }
 
   protected emitCrudEvent(operation: string, args: ICrudEvent): void {
+    const parser = new Parser();
+    const ast = parser.astify(args.command);
+
+    // Safely extract table and columns from AST
+    if (Array.isArray(ast)) {
+      if (ast[0] && 'table' in ast[0]) {
+        args.table = (ast[0] as any).table?.[0].table;
+        args.columns = (ast[0] as any).columns;
+      }
+    } else if ('table' in ast) {
+      args.table = (ast as any).table?.[0].table;
+      args.columns = (ast as any).columns;
+    }
+
+    console.log(ast);
     this.emit(operation, args);
   }
 

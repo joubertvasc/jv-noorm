@@ -236,6 +236,7 @@
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "mysql2": "^3.14.3",
+    "node-sql-parser": "^5.3.12",
     "pg": "^8.16.3",
     "tsx": "^4.20.4",
     "url": "^0.11.4"
@@ -243,6 +244,7 @@
   "devDependencies": {
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.3.0",
+    "@types/node-sql-parser": "^1.1.0",
     "@types/pg": "^8.15.5",
     "eslint-import-resolver-exports": "^1.0.0-beta.5",
     "prettier": "^3.6.2",

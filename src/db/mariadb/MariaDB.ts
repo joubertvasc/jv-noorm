@@ -17,7 +17,6 @@ import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { ConnectionPool } from '../ConnectionPool';
-import { ILoggedUser } from '../interfaces/ILoggedUser';
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
@@ -41,10 +40,6 @@ export default class MariaDB extends BaseDB {
           host: env.DB_HOST,
           port: env.DB_PORT,
           connectionLimit: env.DB_MAX_POOL,
-          // Configurações adicionais para estabilidade
-          // acquireTimeout: 60000,
-          // timeout: 60000,
-          // reconnect: true,
           idleTimeout: 300000,
         });
 
@@ -120,23 +115,14 @@ export default class MariaDB extends BaseDB {
       if (!this.pool) throw new DBNotConnectedError();
 
       this.log(args.verboseHeader, args.sql);
+      connection = args.transaction ? (args.transaction as PoolConnection) : await this.pool.getConnection();
+      if (!connection) throw new DBNotConnectedError();
 
-      if (args.transaction) {
-        // Para transações, usar a conexão passada diretamente
-        const result = await (args.transaction as PoolConnection).query<RowDataPacket[]>(args.sql, args.values);
-        return !result ? null : result[0];
-      } else {
-        // Para queries normais, obter conexão do pool
-        connection = await this.pool.getConnection();
-        if (!connection) throw new DBNotConnectedError();
-
-        const result = await connection.query<RowDataPacket[]>(args.sql, args.values);
-        return !result ? null : result[0];
-      }
+      const result = await connection.query<RowDataPacket[]>(args.sql, args.values);
+      return !result ? null : result[0];
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
-      // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
       if (connection && !args.transaction) {
         connection.release();
       }
@@ -158,18 +144,11 @@ export default class MariaDB extends BaseDB {
       this.log(args.verboseHeader, args.command);
       let response;
 
-      if (args.transaction) {
-        // Para transações, usar a conexão passada diretamente
-        const [result] = await (args.transaction as PoolConnection).execute<ResultSetHeader>(args.command, args.values);
-        response = result ? result : ({} as ResultSetHeader);
-      } else {
-        // Para comandos normais, obter conexão do pool
-        connection = await this.pool.getConnection();
-        if (!connection) throw new DBNotConnectedError();
+      connection = args.transaction ? (args.transaction as PoolConnection) : await this.pool.getConnection();
+      if (!connection) throw new DBNotConnectedError();
 
-        const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
-        response = result ? result : ({} as ResultSetHeader);
-      }
+      const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
+      response = result ? result : ({} as ResultSetHeader);
 
       this.emitCrudEvent(args.verboseHeader, {
         command: args.command,

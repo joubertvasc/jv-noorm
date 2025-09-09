@@ -16,6 +16,7 @@ const events_1 = __importDefault(require("events"));
 const env_1 = require("../env");
 const wrong_delete_statement_error_1 = require("../shared/errors/wrong-delete-statement-error");
 const db_error_1 = require("../shared/errors/db-error");
+const node_sql_parser_1 = require("node-sql-parser");
 class BaseDB extends events_1.default {
     softDelete = false;
     metadata;
@@ -139,6 +140,20 @@ class BaseDB extends events_1.default {
         return constraints;
     }
     emitCrudEvent(operation, args) {
+        const parser = new node_sql_parser_1.Parser();
+        const ast = parser.astify(args.command);
+        // Safely extract table and columns from AST
+        if (Array.isArray(ast)) {
+            if (ast[0] && 'table' in ast[0]) {
+                args.table = ast[0].table?.[0].table;
+                args.columns = ast[0].columns;
+            }
+        }
+        else if ('table' in ast) {
+            args.table = ast.table?.[0].table;
+            args.columns = ast.columns;
+        }
+        console.log(ast);
         this.emit(operation, args);
     }
     getLoggedUser() {
