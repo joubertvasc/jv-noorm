@@ -141,19 +141,31 @@ class BaseDB extends events_1.default {
     }
     emitCrudEvent(operation, args) {
         const parser = new node_sql_parser_1.Parser();
-        const ast = parser.astify(args.command);
-        // Safely extract table and columns from AST
-        if (Array.isArray(ast)) {
-            if (ast[0] && 'table' in ast[0]) {
-                args.table = ast[0].table?.[0].table;
-                args.columns = ast[0].columns;
+        let ast = parser.astify(args.command);
+        ast = Array.isArray(ast) ? ast : [ast];
+        console.log(ast);
+        if (ast[0] && 'table' in ast[0]) {
+            args.table = ast[0].table?.[0].table;
+            args.columns = ast[0].columns ? ast[0].columns : [];
+            if (ast[0].set) {
+                args.columns = [];
+                for (const column of ast[0].set) {
+                    args.columns.push(column.column);
+                }
+            }
+            if (ast[0].where?.left) {
+                args.columns?.push(ast[0].where?.left.column);
             }
         }
-        else if ('table' in ast) {
-            args.table = ast.table?.[0].table;
-            args.columns = ast.columns;
+        if (args.columns) {
+            args.fields = [];
+            for (let i = 0; i < args.columns.length; i++) {
+                args.fields.push({
+                    name: args.columns[i],
+                    value: i <= args.values.length ? args.values[i] : undefined,
+                });
+            }
         }
-        console.log(ast);
         this.emit(operation, args);
     }
     getLoggedUser() {

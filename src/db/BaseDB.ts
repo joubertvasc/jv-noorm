@@ -22,6 +22,7 @@ import { DBError } from '../shared/errors/db-error';
 import { ILoggedUser } from './interfaces/ILoggedUser';
 import { ICrudEvent } from './interfaces/ICrudEvent';
 import { Parser } from 'node-sql-parser';
+import { isArray } from 'lodash';
 
 export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
@@ -217,20 +218,36 @@ export abstract class BaseDB extends EventEmitter {
 
   protected emitCrudEvent(operation: string, args: ICrudEvent): void {
     const parser = new Parser();
-    const ast = parser.astify(args.command);
+    let ast = parser.astify(args.command);
+    ast = Array.isArray(ast) ? ast : [ast];
+    console.log(ast);
 
-    // Safely extract table and columns from AST
-    if (Array.isArray(ast)) {
-      if (ast[0] && 'table' in ast[0]) {
-        args.table = (ast[0] as any).table?.[0].table;
-        args.columns = (ast[0] as any).columns;
+    if (ast[0] && 'table' in ast[0]) {
+      args.table = (ast[0] as any).table?.[0].table;
+      args.columns = (ast[0] as any).columns ? (ast[0] as any).columns : [];
+
+      if ((ast[0] as any).set) {
+        args.columns = [];
+        for (const column of (ast[0] as any).set) {
+          args.columns.push(column.column);
+        }
       }
-    } else if ('table' in ast) {
-      args.table = (ast as any).table?.[0].table;
-      args.columns = (ast as any).columns;
+
+      if ((ast[0] as any).where?.left) {
+        args.columns?.push((ast[0] as any).where?.left.column);
+      }
     }
 
-    console.log(ast);
+    if (args.columns) {
+      args.fields = [];
+      for (let i = 0; i < args.columns.length; i++) {
+        args.fields.push({
+          name: args.columns[i],
+          value: i <= args.values.length ? args.values[i] : undefined,
+        });
+      }
+    }
+
     this.emit(operation, args);
   }
 

@@ -12,6 +12,10 @@ export interface ICrudEvent {
   command: string;
   table?: string;
   columns?: string[];
+  fields?: {
+    name: string;
+    value: any;
+  }[];
   values: any;
   inTransaction: boolean;
   result: any;

@@ -94,7 +94,7 @@ class MariaDB extends BaseDB_1.BaseDB {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.sql);
-            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+            connection = args.transaction ? args.transaction : await this.pool.getConnection();
             if (!connection)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             const result = await connection.query(args.sql, args.values);
@@ -104,7 +104,6 @@ class MariaDB extends BaseDB_1.BaseDB {
             throw new db_error_1.DBError(err.message);
         }
         finally {
-            // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
             if (connection && !args.transaction) {
                 connection.release();
             }
@@ -118,7 +117,7 @@ class MariaDB extends BaseDB_1.BaseDB {
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.command);
             let response;
-            const connection = args.transaction ? args.transaction : await this.pool.getConnection();
+            connection = args.transaction ? args.transaction : await this.pool.getConnection();
             if (!connection)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             const [result] = await connection.execute(args.command, args.values);
