@@ -138,6 +138,9 @@ class BaseDB extends events_1.default {
         }
         return constraints;
     }
+    emitCrudEvent(operation, args) {
+        this.emit(operation, args);
+    }
     getLoggedUser() {
         if (!this.asyncLocalStorage)
             return {};

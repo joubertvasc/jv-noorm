@@ -106,7 +106,7 @@ export class PostgreSQL extends BaseDB {
               }
             : result.rows;
 
-      this.emit(args.verboseHeader, {
+      this.emitCrudEvent(args.verboseHeader, {
         command: args.command,
         values: args.values,
         inTransaction: !!args.transaction,

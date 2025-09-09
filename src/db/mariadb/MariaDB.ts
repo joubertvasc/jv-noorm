@@ -171,7 +171,7 @@ export default class MariaDB extends BaseDB {
         response = result ? result : ({} as ResultSetHeader);
       }
 
-      this.emit(args.verboseHeader, {
+      this.emitCrudEvent(args.verboseHeader, {
         command: args.command,
         values: args.values,
         inTransaction: !!args.transaction,

@@ -20,6 +20,7 @@ import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { WrongDeleteStatementError } from '../shared/errors/wrong-delete-statement-error';
 import { DBError } from '../shared/errors/db-error';
 import { ILoggedUser } from './interfaces/ILoggedUser';
+import { ICrudEvent } from './interfaces/ICrudEvent';
 
 export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
@@ -213,8 +214,12 @@ export abstract class BaseDB extends EventEmitter {
     return constraints;
   }
 
-  protected getLoggedUser() {
-    if (!this.asyncLocalStorage) return {};
+  protected emitCrudEvent(operation: string, args: ICrudEvent): void {
+    this.emit(operation, args);
+  }
+
+  protected getLoggedUser(): ILoggedUser {
+    if (!this.asyncLocalStorage) return {} as ILoggedUser;
 
     const store = this.asyncLocalStorage.getStore();
     const userId = (store as ILoggedUser)?.userId;

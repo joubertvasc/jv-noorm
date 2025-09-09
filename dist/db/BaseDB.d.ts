@@ -14,6 +14,8 @@ import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
+import { ILoggedUser } from './interfaces/ILoggedUser';
+import { ICrudEvent } from './interfaces/ICrudEvent';
 export declare abstract class BaseDB extends EventEmitter {
     private softDelete;
     private metadata;
@@ -84,12 +86,7 @@ export declare abstract class BaseDB extends EventEmitter {
     findUpdatedAtColumn(table: string): string | null;
     findDeletedAtColumn(table: string): string | null;
     getTableReferencedConstraints(referencedTableName: string): ITableConstraintsResultSet[];
-    protected getLoggedUser(): {
-        userId?: undefined;
-        userName?: undefined;
-    } | {
-        userId: string | number;
-        userName: string;
-    };
+    protected emitCrudEvent(operation: string, args: ICrudEvent): void;
+    protected getLoggedUser(): ILoggedUser;
     log(header: string, log: string): void;
 }

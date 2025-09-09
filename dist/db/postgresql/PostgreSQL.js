@@ -82,7 +82,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
                         rowCount: result.rowCount,
                     }
                     : result.rows;
-            this.emit(args.verboseHeader, {
+            this.emitCrudEvent(args.verboseHeader, {
                 command: args.command,
                 values: args.values,
                 inTransaction: !!args.transaction,

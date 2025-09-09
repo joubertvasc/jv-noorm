@@ -143,7 +143,7 @@ class MariaDB extends BaseDB_1.BaseDB {
                 const [result] = await connection.execute(args.command, args.values);
                 response = result ? result : {};
             }
-            this.emit(args.verboseHeader, {
+            this.emitCrudEvent(args.verboseHeader, {
                 command: args.command,
                 values: args.values,
                 inTransaction: !!args.transaction,
