@@ -179,6 +179,11 @@
       "require": "./dist/enum/deleteRule.js",
       "types": "./dist/enum/deleteRule.d.ts"
     },
+    "./ILoggedUser": {
+      "import": "./dist/db/interfaces/ILoggedUser.js",
+      "require": "./dist/db/interfaces/ILoggedUser.js",
+      "types": "./dist/db/interfaces/ILoggedUser.d.ts"
+    },
     "./IColumnMetaDataResultSet": {
       "import": "./dist/db/interfaces/IColumnMetaDataResultSet.js",
       "require": "./dist/db/interfaces/IColumnMetaDataResultSet.js",

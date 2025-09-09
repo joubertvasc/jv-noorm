@@ -15,8 +15,8 @@ const db_error_1 = require("../../shared/errors/db-error");
 const pool_1 = require("./pool");
 class PostgreSQL extends BaseDB_1.BaseDB {
     pgConnection;
-    constructor() {
-        super();
+    constructor(asyncLocalStorage) {
+        super(asyncLocalStorage);
         if (!env_1.env.DB_SCHEMA)
             throw new db_schema_not_defined_error_1.DBSchemaNotDefinedError();
         this.pgConnection = (0, pool_1.initPool)({
@@ -34,6 +34,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             await this.pgConnection.query('SELECT 1');
             if (env_1.env.DB_VERBOSE)
                 this.log('CONNECT', 'PostgreSQL Connected');
+            this.emit('connected');
             return this.pgConnection;
         }
         catch (err) {
@@ -46,6 +47,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             await (0, pool_1.closePool)();
             if (env_1.env.DB_VERBOSE)
                 this.log('CLOSE', 'PostgreSQL Pool closed');
+            this.emit('closed');
         }
         catch (err) {
             this.log('ERROR', `Error closing PostgreSQL pool: ${err.message}`);
@@ -70,7 +72,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
         try {
             this.log(args.verboseHeader, args.command);
             const result = await client.query(args.command, args.values);
-            return result.command === 'INSERT'
+            const response = result.command === 'INSERT'
                 ? {
                     rowCount: result.rowCount,
                     id: result.rows.length > 0 ? result.rows[0].id : 0,
@@ -80,6 +82,14 @@ class PostgreSQL extends BaseDB_1.BaseDB {
                         rowCount: result.rowCount,
                     }
                     : result.rows;
+            this.emit(args.verboseHeader, {
+                command: args.command,
+                values: args.values,
+                inTransaction: !!args.transaction,
+                result: response,
+                user: this.getLoggedUser(),
+            });
+            return response;
         }
         finally {
             // Libera a conexão apenas se não estiver em transação

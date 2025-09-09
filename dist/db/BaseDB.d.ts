@@ -5,16 +5,20 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import EventEmitter from 'events';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { ConnectionPool } from './ConnectionPool';
 import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
-import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
-import { ConnectionPool } from './ConnectionPool';
-export declare abstract class BaseDB {
+export declare abstract class BaseDB extends EventEmitter {
     private softDelete;
     private metadata;
+    protected asyncLocalStorage: AsyncLocalStorage<any> | undefined;
+    constructor(asyncLocalStorage?: AsyncLocalStorage<any>);
     isSoftDelete(): boolean;
     setSoftDelete(useSoftDelete: boolean): void;
     getMetadata(): ITableMetaDataResultSet[];
@@ -80,5 +84,12 @@ export declare abstract class BaseDB {
     findUpdatedAtColumn(table: string): string | null;
     findDeletedAtColumn(table: string): string | null;
     getTableReferencedConstraints(referencedTableName: string): ITableConstraintsResultSet[];
+    protected getLoggedUser(): {
+        userId?: undefined;
+        userName?: undefined;
+    } | {
+        userId: string | number;
+        userName: string;
+    };
     log(header: string, log: string): void;
 }

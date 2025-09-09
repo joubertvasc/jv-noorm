@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RowDataPacket, ResultSetHeader, Pool, Connection, PoolConnection } from 'mysql2/promise';
+import { RowDataPacket, ResultSetHeader, Pool, PoolConnection } from 'mysql2/promise';
 import { initPool } from './pool';
 import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
 import { env } from '../../env';
@@ -17,6 +17,7 @@ import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { ConnectionPool } from '../ConnectionPool';
+import { ILoggedUser } from '../interfaces/ILoggedUser';
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
@@ -54,6 +55,8 @@ export default class MariaDB extends BaseDB {
         if (env.DB_VERBOSE) this.log('CONNECT', 'DB Connected');
 
         this.retries = 0; // Reset retries on successful connection
+        this.emit('connected');
+
         return this.pool;
       } catch (err: any) {
         this.retries++;
@@ -77,14 +80,6 @@ export default class MariaDB extends BaseDB {
     this.pool.on('connection', connection => {
       if (env.DB_VERBOSE) this.log('POOL', `Nova conexão estabelecida: ${connection.threadId}`);
     });
-
-    // this.pool.on('error', (err) => {
-    //   this.log('ERROR', `Erro no pool: ${err.message}`);
-    // });
-
-    // this.pool.on('close', () => {
-    //   this.log('INFO', 'Pool foi fechado');
-    // });
   }
 
   private isPoolClosed(): boolean {
@@ -103,6 +98,7 @@ export default class MariaDB extends BaseDB {
       try {
         await this.pool.end();
         if (env.DB_VERBOSE) this.log('CLOSE', 'Pool fechado com sucesso');
+        this.emit('closed');
       } catch (err: any) {
         this.log('ERROR', `Erro ao fechar pool: ${err.message}`);
       } finally {
@@ -160,23 +156,33 @@ export default class MariaDB extends BaseDB {
       if (!this.pool) throw new DBNotConnectedError();
 
       this.log(args.verboseHeader, args.command);
+      let response;
 
       if (args.transaction) {
         // Para transações, usar a conexão passada diretamente
         const [result] = await (args.transaction as PoolConnection).execute<ResultSetHeader>(args.command, args.values);
-        return result ? result : ({} as ResultSetHeader);
+        response = result ? result : ({} as ResultSetHeader);
       } else {
         // Para comandos normais, obter conexão do pool
         connection = await this.pool.getConnection();
         if (!connection) throw new DBNotConnectedError();
 
         const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
-        return result ? result : ({} as ResultSetHeader);
+        response = result ? result : ({} as ResultSetHeader);
       }
+
+      this.emit(args.verboseHeader, {
+        command: args.command,
+        values: args.values,
+        inTransaction: !!args.transaction,
+        result: response,
+        user: this.getLoggedUser(),
+      });
+
+      return response;
     } catch (err: any) {
       throw new DBError(err.message);
     } finally {
-      // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
       if (connection && !args.transaction) {
         connection.release();
       }

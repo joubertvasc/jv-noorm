@@ -43,6 +43,7 @@ class MariaDB extends BaseDB_1.BaseDB {
                 if (env_1.env.DB_VERBOSE)
                     this.log('CONNECT', 'DB Connected');
                 this.retries = 0; // Reset retries on successful connection
+                this.emit('connected');
                 return this.pool;
             }
             catch (err) {
@@ -64,12 +65,6 @@ class MariaDB extends BaseDB_1.BaseDB {
             if (env_1.env.DB_VERBOSE)
                 this.log('POOL', `Nova conexão estabelecida: ${connection.threadId}`);
         });
-        // this.pool.on('error', (err) => {
-        //   this.log('ERROR', `Erro no pool: ${err.message}`);
-        // });
-        // this.pool.on('close', () => {
-        //   this.log('INFO', 'Pool foi fechado');
-        // });
     }
     isPoolClosed() {
         return !this.pool || this.pool._closed === true;
@@ -86,6 +81,7 @@ class MariaDB extends BaseDB_1.BaseDB {
                 await this.pool.end();
                 if (env_1.env.DB_VERBOSE)
                     this.log('CLOSE', 'Pool fechado com sucesso');
+                this.emit('closed');
             }
             catch (err) {
                 this.log('ERROR', `Erro ao fechar pool: ${err.message}`);
@@ -133,10 +129,11 @@ class MariaDB extends BaseDB_1.BaseDB {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.command);
+            let response;
             if (args.transaction) {
                 // Para transações, usar a conexão passada diretamente
                 const [result] = await args.transaction.execute(args.command, args.values);
-                return result ? result : {};
+                response = result ? result : {};
             }
             else {
                 // Para comandos normais, obter conexão do pool
@@ -144,14 +141,21 @@ class MariaDB extends BaseDB_1.BaseDB {
                 if (!connection)
                     throw new db_not_connected_error_1.DBNotConnectedError();
                 const [result] = await connection.execute(args.command, args.values);
-                return result ? result : {};
+                response = result ? result : {};
             }
+            this.emit(args.verboseHeader, {
+                command: args.command,
+                values: args.values,
+                inTransaction: !!args.transaction,
+                result: response,
+                user: this.getLoggedUser(),
+            });
+            return response;
         }
         catch (err) {
             throw new db_error_1.DBError(err.message);
         }
         finally {
-            // ✅ CORREÇÃO: Apenas liberar se for conexão do pool (não transacional)
             if (connection && !args.transaction) {
                 connection.release();
             }

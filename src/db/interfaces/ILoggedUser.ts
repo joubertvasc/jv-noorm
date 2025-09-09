@@ -5,6 +5,8 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { AsyncLocalStorage } from 'node:async_hooks';
-import { BaseDB } from './BaseDB';
-export declare function createNoORMConnection(asyncLocalStorage?: AsyncLocalStorage<any>): BaseDB;
+
+export interface ILoggedUser {
+  userId: string | number;
+  userName: string;
+}

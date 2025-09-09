@@ -6,23 +6,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Connection } from 'mysql2/promise';
-import { PoolClient } from 'pg';
 import { format } from 'date-fns';
+import EventEmitter from 'events';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { env } from '../env';
+import { ConnectionPool } from './ConnectionPool';
 import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { WrongDeleteStatementError } from '../shared/errors/wrong-delete-statement-error';
 import { DBError } from '../shared/errors/db-error';
-import { env } from '../env';
-import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
-import { ConnectionPool } from './ConnectionPool';
+import { ILoggedUser } from './interfaces/ILoggedUser';
 
-export abstract class BaseDB {
+export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
   private metadata: ITableMetaDataResultSet[] | undefined;
+  protected asyncLocalStorage: AsyncLocalStorage<any> | undefined;
+
+  constructor(asyncLocalStorage?: AsyncLocalStorage<any>) {
+    super();
+    this.asyncLocalStorage = asyncLocalStorage;
+  }
 
   public isSoftDelete() {
     return this.softDelete;
@@ -204,6 +211,19 @@ export abstract class BaseDB {
     }
 
     return constraints;
+  }
+
+  protected getLoggedUser() {
+    if (!this.asyncLocalStorage) return {};
+
+    const store = this.asyncLocalStorage.getStore();
+    const userId = (store as ILoggedUser)?.userId;
+    const userName = (store as ILoggedUser)?.userName;
+
+    return {
+      userId,
+      userName,
+    };
   }
 
   log(header: string, log: string): void {

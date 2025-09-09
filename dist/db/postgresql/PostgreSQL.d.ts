@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { PoolClient } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
@@ -14,7 +15,7 @@ import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
 export declare class PostgreSQL extends BaseDB {
     private pgConnection;
-    constructor();
+    constructor(asyncLocalStorage?: AsyncLocalStorage<any>);
     protected internalConnect(): Promise<any>;
     close(): Promise<void>;
     protected query(args: {

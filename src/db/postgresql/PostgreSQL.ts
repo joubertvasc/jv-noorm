@@ -7,6 +7,7 @@
  */
 
 import { Pool, PoolClient } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
@@ -17,12 +18,13 @@ import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defin
 import { DBError } from '../../shared/errors/db-error';
 import { initPool, closePool } from './pool';
 import { ConnectionPool } from '../ConnectionPool';
+import { ILoggedUser } from '../interfaces/ILoggedUser';
 
 export class PostgreSQL extends BaseDB {
   private pgConnection: Pool;
 
-  constructor() {
-    super();
+  constructor(asyncLocalStorage?: AsyncLocalStorage<any>) {
+    super(asyncLocalStorage);
 
     if (!env.DB_SCHEMA) throw new DBSchemaNotDefinedError();
 
@@ -41,6 +43,8 @@ export class PostgreSQL extends BaseDB {
       // Testa a conexão
       await this.pgConnection.query('SELECT 1');
       if (env.DB_VERBOSE) this.log('CONNECT', 'PostgreSQL Connected');
+      this.emit('connected');
+
       return this.pgConnection;
     } catch (err: any) {
       this.log('ERROR', `PostgreSQL connection error: ${err.message}`);
@@ -52,6 +56,7 @@ export class PostgreSQL extends BaseDB {
     try {
       await closePool();
       if (env.DB_VERBOSE) this.log('CLOSE', 'PostgreSQL Pool closed');
+      this.emit('closed');
     } catch (err: any) {
       this.log('ERROR', `Error closing PostgreSQL pool: ${err.message}`);
     }
@@ -89,16 +94,27 @@ export class PostgreSQL extends BaseDB {
       this.log(args.verboseHeader, args.command);
       const result = await client.query(args.command, args.values);
 
-      return result.command === 'INSERT'
-        ? {
-            rowCount: result.rowCount,
-            id: result.rows.length > 0 ? result.rows[0].id : 0,
-          }
-        : result.command === 'UPDATE' || result.command === 'DELETE'
+      const response =
+        result.command === 'INSERT'
           ? {
               rowCount: result.rowCount,
+              id: result.rows.length > 0 ? result.rows[0].id : 0,
             }
-          : result.rows;
+          : result.command === 'UPDATE' || result.command === 'DELETE'
+            ? {
+                rowCount: result.rowCount,
+              }
+            : result.rows;
+
+      this.emit(args.verboseHeader, {
+        command: args.command,
+        values: args.values,
+        inTransaction: !!args.transaction,
+        result: response,
+        user: this.getLoggedUser(),
+      });
+
+      return response;
     } finally {
       // Libera a conexão apenas se não estiver em transação
       if (!args.transaction) {

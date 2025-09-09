@@ -6,15 +6,24 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseDB = void 0;
 const date_fns_1 = require("date-fns");
+const events_1 = __importDefault(require("events"));
+const env_1 = require("../env");
 const wrong_delete_statement_error_1 = require("../shared/errors/wrong-delete-statement-error");
 const db_error_1 = require("../shared/errors/db-error");
-const env_1 = require("../env");
-class BaseDB {
+class BaseDB extends events_1.default {
     softDelete = false;
     metadata;
+    asyncLocalStorage;
+    constructor(asyncLocalStorage) {
+        super();
+        this.asyncLocalStorage = asyncLocalStorage;
+    }
     isSoftDelete() {
         return this.softDelete;
     }
@@ -128,6 +137,17 @@ class BaseDB {
             }
         }
         return constraints;
+    }
+    getLoggedUser() {
+        if (!this.asyncLocalStorage)
+            return {};
+        const store = this.asyncLocalStorage.getStore();
+        const userId = store?.userId;
+        const userName = store?.userName;
+        return {
+            userId,
+            userName,
+        };
     }
     log(header, log) {
         if (env_1.env.DB_VERBOSE)

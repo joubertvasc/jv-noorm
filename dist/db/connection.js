@@ -16,12 +16,12 @@ const dbType_1 = require("../enum/dbType");
 const env_1 = require("../env");
 const invalid_db_type_error_1 = require("../shared/errors/invalid-db-type-error");
 const PostgreSQL_1 = require("./postgresql/PostgreSQL");
-function createNoORMConnection() {
+function createNoORMConnection(asyncLocalStorage) {
     switch (env_1.env.DB_TYPE) {
         case dbType_1.DBType.MariaDB:
-            return new MariaDB_1.default();
+            return new MariaDB_1.default(asyncLocalStorage);
         case dbType_1.DBType.PostgreSQL:
-            return new PostgreSQL_1.PostgreSQL();
+            return new PostgreSQL_1.PostgreSQL(asyncLocalStorage);
         default:
             throw new invalid_db_type_error_1.InvalidDBTypeError();
     }
