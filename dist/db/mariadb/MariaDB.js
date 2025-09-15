@@ -171,23 +171,39 @@ class MariaDB extends BaseDB_1.BaseDB {
     }
     async insert(args) {
         try {
-            const insertResult = await this.execCommand({
-                command: args.command,
-                values: args.values,
-                verboseHeader: 'INSERT',
-                transaction: args.transaction,
-            });
-            if (insertResult) {
+            if (args.command.includes(' returning ')) {
+                const insertResult = await this.query({
+                    sql: args.command,
+                    values: args.values,
+                    transaction: args.transaction,
+                    verboseHeader: 'INSERT',
+                });
+                console.log('INSERT RESULT', insertResult);
                 return {
-                    rowsInserted: insertResult.affectedRows,
-                    id: insertResult.affectedRows === 1 ? insertResult.insertId : null,
+                    rowsInserted: insertResult?.length || 0,
+                    id: insertResult && insertResult[0] && typeof insertResult[0].id !== 'undefined' ? insertResult[0].id : null,
                 };
             }
             else {
-                return {
-                    rowsInserted: 0,
-                    id: null,
-                };
+                const insertResult = await this.execCommand({
+                    command: args.command,
+                    values: args.values,
+                    verboseHeader: 'INSERT',
+                    transaction: args.transaction,
+                });
+                console.log('INSERT RESULT', insertResult);
+                if (insertResult) {
+                    return {
+                        rowsInserted: insertResult.affectedRows,
+                        id: insertResult.affectedRows === 1 ? insertResult.insertId : null,
+                    };
+                }
+                else {
+                    return {
+                        rowsInserted: 0,
+                        id: null,
+                    };
+                }
             }
         }
         catch (err) {

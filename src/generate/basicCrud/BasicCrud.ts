@@ -119,6 +119,13 @@ export class BasicCrud {
               return column.autoIncrement;
             });
 
+            const primaryKey = this.metadata.columns.filter(column => {
+              return column.primaryKey;
+            });
+
+            const hasUUID = primaryKey && primaryKey.length === 1 && primaryKey[0].columnType.toLowerCase() === 'uuid';
+            const primaryKeyField = primaryKey && primaryKey.length === 1 && primaryKey[0].columnName;
+
             if (this.createdAtColumn) {
               if (!fields.includes(this.createdAtColumn)) {
                 fields.push(this.createdAtColumn);
@@ -127,9 +134,7 @@ export class BasicCrud {
               }
             }
 
-            const command = `INSERT INTO ${this.tableName}(${fields.join(', ')}) 
-                                  VALUES (${params.join(', ')}) 
-                                  ${this.isPostgreSQL && hasAutoincrement ? ' RETURNING id' : ''}`;
+            const command = `INSERT INTO ${this.tableName}(${fields.join(', ')}) VALUES (${params.join(', ')}) ${hasAutoincrement || hasUUID ? ` returning ${primaryKeyField}` : ''}`;
             const result = await this.db.insert({ command, values, transaction });
 
             if (hasAutoincrement && Number(result.id || '0') > 0) {

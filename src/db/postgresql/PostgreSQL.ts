@@ -18,7 +18,6 @@ import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defin
 import { DBError } from '../../shared/errors/db-error';
 import { initPool, closePool } from './pool';
 import { ConnectionPool } from '../ConnectionPool';
-import { ILoggedUser } from '../interfaces/ILoggedUser';
 
 export class PostgreSQL extends BaseDB {
   private pgConnection: Pool;
