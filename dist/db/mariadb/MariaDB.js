@@ -178,7 +178,6 @@ class MariaDB extends BaseDB_1.BaseDB {
                     transaction: args.transaction,
                     verboseHeader: 'INSERT',
                 });
-                console.log('INSERT RESULT', insertResult);
                 return {
                     rowsInserted: insertResult?.length || 0,
                     id: insertResult && insertResult[0] && typeof insertResult[0].id !== 'undefined' ? insertResult[0].id : null,
@@ -191,7 +190,6 @@ class MariaDB extends BaseDB_1.BaseDB {
                     verboseHeader: 'INSERT',
                     transaction: args.transaction,
                 });
-                console.log('INSERT RESULT', insertResult);
                 if (insertResult) {
                     return {
                         rowsInserted: insertResult.affectedRows,
