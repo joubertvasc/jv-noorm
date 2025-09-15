@@ -111,8 +111,10 @@ class BasicCrud {
                         }
                         const command = `INSERT INTO ${this.tableName}(${fields.join(', ')}) VALUES (${params.join(', ')}) ${hasAutoincrement || hasUUID ? ` returning ${primaryKeyField}` : ''}`;
                         const result = await this.db.insert({ command, values, transaction });
-                        if (hasAutoincrement && Number(result.id || '0') > 0) {
-                            data = await this.get({ key: Number(result.id) });
+                        if ((hasAutoincrement || hasUUID) &&
+                            result.id &&
+                            ((typeof result.id === 'number' && result.id > 0) || (typeof result.id === 'string' && result.id !== ''))) {
+                            data = await this.get({ key: result.id });
                         }
                         await this.hookAfterCreate({ data, transaction });
                         await this.hookAfterSave({ data, transaction });
