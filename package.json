@@ -1,6 +1,6 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.47",
+  "version": "0.0.48",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
@@ -228,6 +228,11 @@
       "import": "./dist/generate/interfaces/IDropDown.js",
       "require": "./dist/generate/interfaces/IDropDown.js",
       "types": "./dist/generate/interfaces/IDropDown.d.ts"
+    },
+    "./IListResult": {
+      "import": "./dist/generate/interfaces/IListResult.js",
+      "require": "./dist/generate/interfaces/IListResult.js",
+      "types": "./dist/generate/interfaces/IListResult.d.ts"
     }
   },
   "dependencies": {

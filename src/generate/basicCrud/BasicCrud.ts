@@ -18,8 +18,6 @@ import { DBError } from '../../shared/errors/db-error';
 import { env } from '../../env';
 import { DBType } from '../../enum/dbType';
 import { BadPrimaryKeyFormatError } from '../../shared/errors/bad-primary-key-format-error';
-import { Connection } from 'mysql2/promise';
-import { PoolClient } from 'pg';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
 import { ITableConstraintsResultSet } from '../../db/interfaces/ITableConstraintsResultSet';
 import { ConstraintError } from '../../shared/errors/constraint-error';
@@ -27,6 +25,7 @@ import { Operation } from '../../enum/operations';
 import { DeleteRule } from '../../enum/deleteRule';
 import { IDropDown } from '../interfaces/IDropDown';
 import { ConnectionPool } from '../../db/ConnectionPool';
+import { IListResult } from '../interfaces/IListResult';
 
 export interface IPrimaryKeyQuery {
   cmd: string;
@@ -490,7 +489,7 @@ export class BasicCrud {
     softDeleted?: boolean;
     includeAuditingFields?: boolean;
     transaction?: ConnectionPool;
-  }): Promise<any> {
+  }): Promise<IListResult> {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
 
@@ -509,18 +508,18 @@ export class BasicCrud {
           })
           .filter((c): c is IColumnMetaDataResultSet => c !== undefined);
 
-    let sql = `SELECT `;
+    let sql = `SELECT %%PROJECTION%% FROM ${this.tableName}\n`;
+    let projection = '';
 
     if (params?.fields) {
-      sql += params.fields;
+      projection += params.fields;
     } else {
       for (let columnIdx = 0; columnIdx < columns.length; columnIdx++) {
         const columnName = columns[columnIdx].columnName;
-        sql += `${columnName}${columnIdx < columns.length - 1 ? ', ' : ''}`;
+        projection += `${columnName}${columnIdx < columns.length - 1 ? ', ' : ''}`;
       }
     }
-    sql += '\n';
-    sql += `  FROM ${this.tableName}\n`;
+    projection += '\n';
 
     let conditions: string[] = [];
     let values: any[] = [];
@@ -559,6 +558,12 @@ export class BasicCrud {
       sql += `${conditionIdx === 0 ? 'WHERE' : '  AND'} ${conditions[conditionIdx]}\n`;
     }
 
+    const count = await this.db.queryRow({
+      sql: sql.replace('%%PROJECTION%%', 'COUNT(*) AS amount'),
+      values,
+      transaction: params?.transaction || undefined,
+    });
+
     if (params && params.orderBy) {
       if (!params.offset && params.page && params.page > 0 && params.limit) {
         params.offset = (params.page - 1) * params.limit;
@@ -568,11 +573,16 @@ export class BasicCrud {
       ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? ', ' : ''}${params.limit || ''}` : ''}`;
     }
 
-    return await this.db.queryRows({
-      sql,
+    const rows = await this.db.queryRows({
+      sql: sql.replace('%%PROJECTION%%', projection),
       values,
       transaction: params?.transaction || undefined,
     });
+
+    return {
+      count: count.amount,
+      rows: rows || [],
+    };
   }
 
   public async dropdownList(params: {

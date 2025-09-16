@@ -412,18 +412,18 @@ class BasicCrud {
                 return undefined;
             })
                 .filter((c) => c !== undefined);
-        let sql = `SELECT `;
+        let sql = `SELECT %%PROJECTION%% FROM ${this.tableName}\n`;
+        let projection = '';
         if (params?.fields) {
-            sql += params.fields;
+            projection += params.fields;
         }
         else {
             for (let columnIdx = 0; columnIdx < columns.length; columnIdx++) {
                 const columnName = columns[columnIdx].columnName;
-                sql += `${columnName}${columnIdx < columns.length - 1 ? ', ' : ''}`;
+                projection += `${columnName}${columnIdx < columns.length - 1 ? ', ' : ''}`;
             }
         }
-        sql += '\n';
-        sql += `  FROM ${this.tableName}\n`;
+        projection += '\n';
         let conditions = [];
         let values = [];
         if (params && params.key) {
@@ -457,6 +457,11 @@ class BasicCrud {
         for (let conditionIdx = 0; conditionIdx < conditions.length; conditionIdx++) {
             sql += `${conditionIdx === 0 ? 'WHERE' : '  AND'} ${conditions[conditionIdx]}\n`;
         }
+        const count = await this.db.queryRow({
+            sql: sql.replace('%%PROJECTION%%', 'COUNT(*) AS amount'),
+            values,
+            transaction: params?.transaction || undefined,
+        });
         if (params && params.orderBy) {
             if (!params.offset && params.page && params.page > 0 && params.limit) {
                 params.offset = (params.page - 1) * params.limit;
@@ -464,11 +469,15 @@ class BasicCrud {
             sql += ` ORDER BY ${params.orderBy} ${params.orderDirection || ' ASC'} 
       ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? ', ' : ''}${params.limit || ''}` : ''}`;
         }
-        return await this.db.queryRows({
-            sql,
+        const rows = await this.db.queryRows({
+            sql: sql.replace('%%PROJECTION%%', projection),
             values,
             transaction: params?.transaction || undefined,
         });
+        return {
+            count: count.amount,
+            rows: rows || [],
+        };
     }
     async dropdownList(params) {
         if (!this.db)

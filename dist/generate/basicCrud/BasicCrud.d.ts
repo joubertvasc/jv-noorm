@@ -12,6 +12,7 @@ import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
 import { Operation } from '../../enum/operations';
 import { IDropDown } from '../interfaces/IDropDown';
 import { ConnectionPool } from '../../db/ConnectionPool';
+import { IListResult } from '../interfaces/IListResult';
 export interface IPrimaryKeyQuery {
     cmd: string;
     values: any[];
@@ -66,7 +67,7 @@ export declare class BasicCrud {
         softDeleted?: boolean;
         includeAuditingFields?: boolean;
         transaction?: ConnectionPool;
-    }): Promise<any>;
+    }): Promise<IListResult>;
     dropdownList(params: {
         filters?: Record<string, any>;
         orderBy?: string;
