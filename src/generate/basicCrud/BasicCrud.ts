@@ -141,7 +141,7 @@ export class BasicCrud {
               result.id &&
               ((typeof result.id === 'number' && result.id > 0) || (typeof result.id === 'string' && result.id !== ''))
             ) {
-              data = await this.get({ key: result.id });
+              data = await this.get({ key: result.id, transaction });
             }
 
             await this.hookAfterCreate({ data, transaction });
@@ -253,7 +253,7 @@ export class BasicCrud {
         try {
           if (constraints && constraints.length > 0) {
             // Let's verify childs restritions to prevent this soft delete.
-            if (!this.hanbleDeleteRestrictions(constraints, key)) {
+            if (!(await this.hanbleDeleteRestrictions(constraints, key))) {
               return false;
             }
 
@@ -421,7 +421,7 @@ export class BasicCrud {
           const constraints = this.db.getTableReferencedConstraints(params.tableName);
           if (constraints && constraints.length > 0) {
             // Let's verify if there are restrition childs preventing this soft delete.
-            if (!this.hanbleDeleteRestrictions(constraints, keys)) {
+            if (!(await this.hanbleDeleteRestrictions(constraints, keys))) {
               return false;
             }
           }
