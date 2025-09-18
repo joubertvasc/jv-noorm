@@ -5,13 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { RowDataPacket, ResultSetHeader, Pool } from 'mysql2/promise';
-import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
-import { BaseDB } from '../BaseDB';
+import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
-import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
+import { BaseDB } from '../BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
+import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
 export default class MariaDB extends BaseDB {
     private pool;
     retries: number;

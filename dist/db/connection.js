@@ -11,10 +11,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createNoORMConnection = createNoORMConnection;
-const MariaDB_1 = __importDefault(require("./mariadb/MariaDB"));
 const dbType_1 = require("../enum/dbType");
 const env_1 = require("../env");
 const invalid_db_type_error_1 = require("../shared/errors/invalid-db-type-error");
+const MariaDB_1 = __importDefault(require("./mariadb/MariaDB"));
 const PostgreSQL_1 = require("./postgresql/PostgreSQL");
 function createNoORMConnection(asyncLocalStorage) {
     switch (env_1.env.DB_TYPE) {

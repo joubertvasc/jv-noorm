@@ -8,7 +8,7 @@
 
 import { MigrationHandler } from './MigrationHandler';
 
-export const deploy = async () => {
+export const deploy = async (): Promise<void> => {
   try {
     await MigrationHandler.verify();
     process.exit(0);

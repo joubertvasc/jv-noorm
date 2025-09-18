@@ -10,8 +10,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgreSQL = void 0;
 const BaseDB_1 = require("../../db/BaseDB");
 const env_1 = require("../../env");
-const db_schema_not_defined_error_1 = require("../../shared/errors/db-schema-not-defined-error");
 const db_error_1 = require("../../shared/errors/db-error");
+const db_schema_not_defined_error_1 = require("../../shared/errors/db-schema-not-defined-error");
 const pool_1 = require("./pool");
 class PostgreSQL extends BaseDB_1.BaseDB {
     pgConnection;

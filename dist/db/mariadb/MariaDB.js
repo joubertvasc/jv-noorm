@@ -7,11 +7,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const pool_1 = require("./pool");
 const env_1 = require("../../env");
 const db_error_1 = require("../../shared/errors/db-error");
-const BaseDB_1 = require("../BaseDB");
 const db_not_connected_error_1 = require("../../shared/errors/db-not-connected-error");
+const BaseDB_1 = require("../BaseDB");
+const pool_1 = require("./pool");
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
 class MariaDB extends BaseDB_1.BaseDB {

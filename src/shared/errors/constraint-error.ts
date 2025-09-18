@@ -7,7 +7,7 @@
  */
 
 export class ConstraintError extends Error {
-  constructor(message?: string, obj?: any) {
+  constructor(message?: string) {
     super(message ?? 'invalid-metadata-error');
   }
 }

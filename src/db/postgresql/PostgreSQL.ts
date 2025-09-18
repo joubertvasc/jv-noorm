@@ -6,18 +6,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Pool, PoolClient } from 'pg';
 import { AsyncLocalStorage } from 'node:async_hooks';
+
+import { Pool, PoolClient } from 'pg';
+
+import { BaseDB } from '../../db/BaseDB';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
-import { BaseDB } from '../../db/BaseDB';
 import { env } from '../../env';
-import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defined-error';
 import { DBError } from '../../shared/errors/db-error';
-import { initPool, closePool } from './pool';
+import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defined-error';
 import { ConnectionPool } from '../ConnectionPool';
+import { closePool, initPool } from './pool';
 
 export class PostgreSQL extends BaseDB {
   private pgConnection: Pool;

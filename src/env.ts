@@ -7,10 +7,11 @@
  */
 
 import 'dotenv/config';
+
+import { DBType } from './enum/dbType';
+import { IEnv } from './interfaces/IEnv';
 import { EnvNotDefinedError } from './shared/errors/env-not-defined-error';
 import { InvalidValueError } from './shared/errors/invalid-value-error';
-import { IEnv } from './interfaces/IEnv';
-import { DBType } from './enum/dbType';
 import { ParseURL } from './shared/utils/ParseURL';
 
 const databaseURL = ParseURL.parseDBUrl(getEnv('DATABASE_URL', null));

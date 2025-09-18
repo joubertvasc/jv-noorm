@@ -6,8 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createNoORMConnection } from '../db/connection';
 import { PoolClient } from 'pg';
+
+import { createNoORMConnection } from '../db/connection';
 
 (async () => {
   // Create the connection based on .env informations

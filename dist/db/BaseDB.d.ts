@@ -5,17 +5,17 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import EventEmitter from 'events';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { ConnectionPool } from './ConnectionPool';
-import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
-import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
+import EventEmitter from 'events';
+import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../db/interfaces/IDBUpdateResult';
-import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
+import { ConnectionPool } from './ConnectionPool';
+import { ICrudEvent } from './interfaces/ICrudEvent';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { ILoggedUser } from './interfaces/ILoggedUser';
-import { ICrudEvent } from './interfaces/ICrudEvent';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
+import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
 export declare abstract class BaseDB extends EventEmitter {
     private softDelete;
     private metadata;

@@ -7,24 +7,25 @@
  */
 
 import { isArray } from 'lodash';
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
-import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
+
 import { BaseDB } from '../../db/BaseDB';
-import { DBMetadataNotLoadedError } from '../../shared/errors/db-metadata-not-loaded';
-import { TableDoesNotExistsError } from '../../shared/errors/table-does-not-exists-error';
-import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
-import { InvalidMetadataError } from '../../shared/errors/invalid-metadata-error';
-import { DBError } from '../../shared/errors/db-error';
-import { env } from '../../env';
-import { DBType } from '../../enum/dbType';
-import { BadPrimaryKeyFormatError } from '../../shared/errors/bad-primary-key-format-error';
+import { ConnectionPool } from '../../db/ConnectionPool';
+import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
 import { ITableConstraintsResultSet } from '../../db/interfaces/ITableConstraintsResultSet';
-import { ConstraintError } from '../../shared/errors/constraint-error';
-import { Operation } from '../../enum/operations';
+import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
+import { DBType } from '../../enum/dbType';
 import { DeleteRule } from '../../enum/deleteRule';
+import { Operation } from '../../enum/operations';
+import { env } from '../../env';
+import { BadPrimaryKeyFormatError } from '../../shared/errors/bad-primary-key-format-error';
+import { ConstraintError } from '../../shared/errors/constraint-error';
+import { DBError } from '../../shared/errors/db-error';
+import { DBMetadataNotLoadedError } from '../../shared/errors/db-metadata-not-loaded';
+import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
+import { InvalidMetadataError } from '../../shared/errors/invalid-metadata-error';
+import { TableDoesNotExistsError } from '../../shared/errors/table-does-not-exists-error';
 import { IDropDown } from '../interfaces/IDropDown';
-import { ConnectionPool } from '../../db/ConnectionPool';
 import { IListResult } from '../interfaces/IListResult';
 
 export interface IPrimaryKeyQuery {
@@ -208,12 +209,12 @@ export class BasicCrud {
             let command = `UPDATE ${this.tableName}
                               SET `;
 
-            let idx = 1;
+            const idx = 1;
             for (let column = 0; column < fields.length; column++) {
               command += `${fields[column]} = ${this.isMariaDB ? '?' : `$${idx}`}${column < fields.length - 1 ? ',' : ''}\n`;
             }
 
-            let primaryKeyInfo = this.mountTableWherePrimaryKey(key);
+            const primaryKeyInfo = this.mountTableWherePrimaryKey(key);
             command += ` WHERE ${primaryKeyInfo.cmd}`;
             primaryKeyInfo.values.forEach(value => {
               values.push(value);
@@ -236,7 +237,7 @@ export class BasicCrud {
   }
 
   public async delete(params: { key: any; transaction?: ConnectionPool; options?: IDeleteOptions }): Promise<boolean> {
-    let { key, transaction, options } = params;
+    const { key, transaction, options } = params;
 
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
@@ -521,8 +522,8 @@ export class BasicCrud {
     }
     projection += '\n';
 
-    let conditions: string[] = [];
-    let values: any[] = [];
+    const conditions: string[] = [];
+    const values: any[] = [];
     if (params && params.key) {
       const primaryKeyInfo = this.mountTableWherePrimaryKey(params.key);
 
@@ -603,8 +604,8 @@ export class BasicCrud {
     let sql = `SELECT ${this.keyField} AS value, ${this.listField} AS label
                  FROM ${this.tableName}\n`;
 
-    let conditions: string[] = [];
-    let values: any[] = [];
+    const conditions: string[] = [];
+    const values: any[] = [];
     if (params && params.filters) {
       if (!isArray(params.filters)) {
         params.filters = [params.filters];
@@ -693,9 +694,9 @@ export class BasicCrud {
     if (!this.db) throw new DBNotConnectedError();
     if (!this.metadata) throw new DBMetadataNotLoadedError();
 
-    let primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
+    const primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
 
-    let queryCmd = `SELECT COUNT(*) AS amount 
+    const queryCmd = `SELECT COUNT(*) AS amount 
                       FROM ${this.tableName} 
                      WHERE ${!softDeleted ? `${this.deletedAtColumn} IS NULL AND ` : ''} ${primaryKeyInfo.cmd}`;
 

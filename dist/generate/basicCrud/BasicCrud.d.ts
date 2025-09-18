@@ -5,13 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
-import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { BaseDB } from '../../db/BaseDB';
+import { ConnectionPool } from '../../db/ConnectionPool';
+import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
+import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
 import { Operation } from '../../enum/operations';
 import { IDropDown } from '../interfaces/IDropDown';
-import { ConnectionPool } from '../../db/ConnectionPool';
 import { IListResult } from '../interfaces/IListResult';
 export interface IPrimaryKeyQuery {
     cmd: string;

@@ -6,5 +6,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 export declare class ConstraintError extends Error {
-    constructor(message?: string, obj?: any);
+    constructor(message?: string);
 }

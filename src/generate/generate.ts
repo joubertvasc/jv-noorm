@@ -7,6 +7,7 @@
  */
 
 import fs from 'fs';
+
 import { createNoORMConnection } from '../db/connection';
 import { DBType } from '../enum/dbType';
 import { env } from '../env';

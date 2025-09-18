@@ -6,13 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'fs';
 import { format } from 'date-fns';
-import { RemoveInvalidChars } from '../shared/utils/RemoveInvalidChars';
-import { removeAccents } from '../shared/utils/RemoveAccents';
-import { env } from '../env';
+import fs from 'fs';
 
-export const createMigration = async () => {
+import { env } from '../env';
+import { removeAccents } from '../shared/utils/RemoveAccents';
+import { RemoveInvalidChars } from '../shared/utils/RemoveInvalidChars';
+
+export const createMigration = async (): Promise<void> => {
   if (!process.argv || process.argv.length < 3) {
     console.log('Type a short description to the script.\nUse: yarn migration <description>');
   } else if (process.argv[2].length < 10 || process.argv[2].length > 50) {

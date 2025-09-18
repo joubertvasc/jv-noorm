@@ -5,13 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { PoolClient } from 'pg';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { PoolClient } from 'pg';
+import { BaseDB } from '../../db/BaseDB';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
-import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
 export declare class PostgreSQL extends BaseDB {
     private pgConnection;

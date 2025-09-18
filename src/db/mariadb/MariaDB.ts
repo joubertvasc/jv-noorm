@@ -6,17 +6,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RowDataPacket, ResultSetHeader, Pool, PoolConnection } from 'mysql2/promise';
-import { initPool } from './pool';
-import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
-import { env } from '../../env';
-import { DBError } from '../../shared/errors/db-error';
-import { BaseDB } from '../BaseDB';
-import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
+import { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+
+import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
-import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
+import { env } from '../../env';
+import { DBError } from '../../shared/errors/db-error';
+import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
+import { BaseDB } from '../BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
+import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
+import { initPool } from './pool';
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms

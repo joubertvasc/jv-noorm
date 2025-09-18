@@ -11,11 +11,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createMigration = void 0;
-const fs_1 = __importDefault(require("fs"));
 const date_fns_1 = require("date-fns");
-const RemoveInvalidChars_1 = require("../shared/utils/RemoveInvalidChars");
-const RemoveAccents_1 = require("../shared/utils/RemoveAccents");
+const fs_1 = __importDefault(require("fs"));
 const env_1 = require("../env");
+const RemoveAccents_1 = require("../shared/utils/RemoveAccents");
+const RemoveInvalidChars_1 = require("../shared/utils/RemoveInvalidChars");
 const createMigration = async () => {
     if (!process.argv || process.argv.length < 3) {
         console.log('Type a short description to the script.\nUse: yarn migration <description>');

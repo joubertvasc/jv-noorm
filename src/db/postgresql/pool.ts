@@ -7,6 +7,7 @@
  */
 
 import { Pool, PoolConfig } from 'pg';
+
 import { PoolNotInitializedError } from '../../shared/errors/pool-not-initialized-error';
 
 let pool: Pool;

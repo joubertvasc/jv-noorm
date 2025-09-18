@@ -9,7 +9,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConstraintError = void 0;
 class ConstraintError extends Error {
-    constructor(message, obj) {
+    constructor(message) {
         super(message ?? 'invalid-metadata-error');
     }
 }

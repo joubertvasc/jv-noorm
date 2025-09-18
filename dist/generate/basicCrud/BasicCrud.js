@@ -9,17 +9,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BasicCrud = void 0;
 const lodash_1 = require("lodash");
-const db_metadata_not_loaded_1 = require("../../shared/errors/db-metadata-not-loaded");
-const table_does_not_exists_error_1 = require("../../shared/errors/table-does-not-exists-error");
-const db_not_connected_error_1 = require("../../shared/errors/db-not-connected-error");
-const invalid_metadata_error_1 = require("../../shared/errors/invalid-metadata-error");
-const db_error_1 = require("../../shared/errors/db-error");
-const env_1 = require("../../env");
 const dbType_1 = require("../../enum/dbType");
+const deleteRule_1 = require("../../enum/deleteRule");
+const operations_1 = require("../../enum/operations");
+const env_1 = require("../../env");
 const bad_primary_key_format_error_1 = require("../../shared/errors/bad-primary-key-format-error");
 const constraint_error_1 = require("../../shared/errors/constraint-error");
-const operations_1 = require("../../enum/operations");
-const deleteRule_1 = require("../../enum/deleteRule");
+const db_error_1 = require("../../shared/errors/db-error");
+const db_metadata_not_loaded_1 = require("../../shared/errors/db-metadata-not-loaded");
+const db_not_connected_error_1 = require("../../shared/errors/db-not-connected-error");
+const invalid_metadata_error_1 = require("../../shared/errors/invalid-metadata-error");
+const table_does_not_exists_error_1 = require("../../shared/errors/table-does-not-exists-error");
 class BasicCrud {
     tableName;
     metadata;
@@ -173,11 +173,11 @@ class BasicCrud {
                     if (fields.length > 0) {
                         let command = `UPDATE ${this.tableName}
                               SET `;
-                        let idx = 1;
+                        const idx = 1;
                         for (let column = 0; column < fields.length; column++) {
                             command += `${fields[column]} = ${this.isMariaDB ? '?' : `$${idx}`}${column < fields.length - 1 ? ',' : ''}\n`;
                         }
-                        let primaryKeyInfo = this.mountTableWherePrimaryKey(key);
+                        const primaryKeyInfo = this.mountTableWherePrimaryKey(key);
                         command += ` WHERE ${primaryKeyInfo.cmd}`;
                         primaryKeyInfo.values.forEach(value => {
                             values.push(value);
@@ -196,7 +196,7 @@ class BasicCrud {
         }
     }
     async delete(params) {
-        let { key, transaction, options } = params;
+        const { key, transaction, options } = params;
         if (!this.db)
             throw new db_not_connected_error_1.DBNotConnectedError();
         if (!this.metadata)
@@ -424,8 +424,8 @@ class BasicCrud {
             }
         }
         projection += '\n';
-        let conditions = [];
-        let values = [];
+        const conditions = [];
+        const values = [];
         if (params && params.key) {
             const primaryKeyInfo = this.mountTableWherePrimaryKey(params.key);
             conditions.push(primaryKeyInfo.cmd);
@@ -490,8 +490,8 @@ class BasicCrud {
             throw new invalid_metadata_error_1.InvalidMetadataError('List field not defined for dropdown list');
         let sql = `SELECT ${this.keyField} AS value, ${this.listField} AS label
                  FROM ${this.tableName}\n`;
-        let conditions = [];
-        let values = [];
+        const conditions = [];
+        const values = [];
         if (params && params.filters) {
             if (!(0, lodash_1.isArray)(params.filters)) {
                 params.filters = [params.filters];
@@ -551,8 +551,8 @@ class BasicCrud {
             throw new db_not_connected_error_1.DBNotConnectedError();
         if (!this.metadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
-        let primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
-        let queryCmd = `SELECT COUNT(*) AS amount 
+        const primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
+        const queryCmd = `SELECT COUNT(*) AS amount 
                       FROM ${this.tableName} 
                      WHERE ${!softDeleted ? `${this.deletedAtColumn} IS NULL AND ` : ''} ${primaryKeyInfo.cmd}`;
         try {

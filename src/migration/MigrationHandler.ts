@@ -7,15 +7,16 @@
  */
 
 import fs from 'fs';
-import { env } from '../env';
-import { createNoORMConnection } from '../db/connection';
+
 import { BaseDB } from '../db/BaseDB';
+import { createNoORMConnection } from '../db/connection';
 import { DBType } from '../enum/dbType';
+import { env } from '../env';
 import { DBError } from '../shared/errors/db-error';
 import { InvalidDBTypeError } from '../shared/errors/invalid-db-type-error';
 
 export class MigrationHandler {
-  static async verify() {
+  static async verify(): Promise<void> {
     if (!fs.existsSync(env.SCRIPTS_FOLDER)) {
       console.log('No Script to run.');
       process.exit(0);
@@ -80,7 +81,7 @@ export class MigrationHandler {
     return result;
   }
 
-  static async executeUpdate(db: BaseDB) {
+  static async executeUpdate(db: BaseDB): Promise<void> {
     if (env.DB_VERBOSE) console.log('verifyMigration');
 
     // Carrega do banco os scripts já executados

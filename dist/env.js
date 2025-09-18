@@ -9,9 +9,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.env = void 0;
 require("dotenv/config");
+const dbType_1 = require("./enum/dbType");
 const env_not_defined_error_1 = require("./shared/errors/env-not-defined-error");
 const invalid_value_error_1 = require("./shared/errors/invalid-value-error");
-const dbType_1 = require("./enum/dbType");
 const ParseURL_1 = require("./shared/utils/ParseURL");
 const databaseURL = ParseURL_1.ParseURL.parseDBUrl(getEnv('DATABASE_URL', null));
 const env = {

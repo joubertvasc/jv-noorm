@@ -12,9 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MigrationHandler = void 0;
 const fs_1 = __importDefault(require("fs"));
-const env_1 = require("../env");
 const connection_1 = require("../db/connection");
 const dbType_1 = require("../enum/dbType");
+const env_1 = require("../env");
 const db_error_1 = require("../shared/errors/db-error");
 const invalid_db_type_error_1 = require("../shared/errors/invalid-db-type-error");
 class MigrationHandler {

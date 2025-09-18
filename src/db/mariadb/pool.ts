@@ -7,6 +7,7 @@
  */
 
 import mysql, { Pool, PoolOptions } from 'mysql2/promise';
+
 import { env } from '../../env';
 import { PoolNotInitializedError } from '../../shared/errors/pool-not-initialized-error';
 

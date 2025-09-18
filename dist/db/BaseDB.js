@@ -13,10 +13,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseDB = void 0;
 const date_fns_1 = require("date-fns");
 const events_1 = __importDefault(require("events"));
-const env_1 = require("../env");
-const wrong_delete_statement_error_1 = require("../shared/errors/wrong-delete-statement-error");
-const db_error_1 = require("../shared/errors/db-error");
 const node_sql_parser_1 = require("node-sql-parser");
+const env_1 = require("../env");
+const db_error_1 = require("../shared/errors/db-error");
+const wrong_delete_statement_error_1 = require("../shared/errors/wrong-delete-statement-error");
 class BaseDB extends events_1.default {
     softDelete = false;
     metadata;
