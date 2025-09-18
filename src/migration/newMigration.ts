@@ -46,8 +46,8 @@ export const createMigration = async (): Promise<void> => {
         .execSync(`code --reuse-window --goto ${folder}/${file}:7:1`)
         .toString()
         .replace('\n', '');
-    } catch (err) {
-      console.log(`Não foi possível abrir o arquivo ${folder}/${file}.`);
+    } catch (err: any) {
+      console.log(`Não foi possível abrir o arquivo ${folder}/${file}:`, err.message);
     }
 
     process.exit(0);
