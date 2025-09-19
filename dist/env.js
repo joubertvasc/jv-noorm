@@ -52,24 +52,15 @@ function getBooleanEnv(key, defaultValue) {
         return value;
     if (value === null ||
         value === undefined ||
-        (value !== true &&
-            value !== false &&
-            value.toUpperCase() !== 'TRUE' &&
+        (value.toUpperCase() !== 'TRUE' &&
             value.toUpperCase() !== 'FALSE' &&
             value.toUpperCase() !== 'T' &&
             value.toUpperCase() !== 'F' &&
             value.toUpperCase() !== 'S' &&
             value.toUpperCase() !== 'N' &&
             value !== '1' &&
-            value !== 1 &&
-            value !== '0' &&
-            value !== 0)) {
+            value !== '0')) {
         throw new invalid_value_error_1.InvalidValueError(`${key}-INVALID-BOOLEAN`);
     }
-    return (value === true ||
-        value === '1' ||
-        value === 1 ||
-        value.toUpperCase() === 'TRUE' ||
-        value.toUpperCase() === 'T' ||
-        value.toUpperCase() === 'S');
+    return value === '1' || value.toUpperCase() === 'TRUE' || value.toUpperCase() === 'T' || value.toUpperCase() === 'S';
 }

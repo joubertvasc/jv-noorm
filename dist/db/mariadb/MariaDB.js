@@ -116,12 +116,11 @@ class MariaDB extends BaseDB_1.BaseDB {
             if (!this.pool)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             this.log(args.verboseHeader, args.command);
-            let response;
             connection = args.transaction ? args.transaction : await this.pool.getConnection();
             if (!connection)
                 throw new db_not_connected_error_1.DBNotConnectedError();
             const [result] = await connection.execute(args.command, args.values);
-            response = result ? result : {};
+            const response = result ? result : {};
             this.emitCrudEvent(args.verboseHeader, {
                 command: args.command,
                 values: args.values,

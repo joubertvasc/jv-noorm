@@ -144,7 +144,7 @@ class BasicCrud {
                     throw new bad_primary_key_format_error_1.BadPrimaryKeyFormatError();
                 }
                 for (let i = 0; i < primaryKey.length; i++) {
-                    data[(primaryKey[i] = key[i])];
+                    data[primaryKey[i]] = key[i];
                 }
             }
             else {
@@ -539,9 +539,11 @@ class BasicCrud {
     async hookAfterUpdate(params) {
         return params.data;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async hookBeforeDelete(params) {
         return true;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async hookAfterDelete(params) {
         return true;
     }

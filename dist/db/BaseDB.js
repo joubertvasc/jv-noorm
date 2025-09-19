@@ -47,6 +47,7 @@ class BaseDB extends events_1.default {
     async delete(args) {
         try {
             if ((this.isSoftDelete() || args.options?.softDelete === true) && args.options?.softDelete !== false) {
+                // eslint-disable-next-line no-useless-escape
                 const regex = /delete\s+from\s+([`"\[\]\w.]+)/i;
                 const match = args.command.match(regex);
                 if (match) {

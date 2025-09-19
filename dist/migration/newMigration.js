@@ -32,17 +32,19 @@ const createMigration = async () => {
         const shortName = process.argv[2];
         const scriptName = (0, date_fns_1.format)(new Date(), 'yyyyMMddHHmmss');
         const file = `${scriptName}_${(0, RemoveAccents_1.removeAccents)((0, RemoveInvalidChars_1.RemoveInvalidChars)(shortName))
+            // eslint-disable-next-line no-useless-escape
             .replace(/['"&^ˆ!@#$%*()<>\[\]\\/,.+=\n\t]/g, '')
             .replace(/[ ]/g, '_')}.sql`;
         fs_1.default.writeFileSync(`${folder}/${file}`, `-- Description: ${shortName}\n--      Script: ${file} \n--   File name: ${scriptName}\n--  Created at: ${(0, date_fns_1.format)(new Date(), 'dd/MM/yyyy HH:mm')}\n--      Author: ${require('os').userInfo().username}\n\n`);
         try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('child_process')
                 .execSync(`code --reuse-window --goto ${folder}/${file}:7:1`)
                 .toString()
                 .replace('\n', '');
         }
         catch (err) {
-            console.log(`Não foi possível abrir o arquivo ${folder}/${file}.`);
+            console.log(`Não foi possível abrir o arquivo ${folder}/${file}:`, err.message);
         }
         process.exit(0);
     }

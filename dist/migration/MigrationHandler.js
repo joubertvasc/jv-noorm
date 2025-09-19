@@ -26,9 +26,11 @@ class MigrationHandler {
         try {
             switch (env_1.env.DB_TYPE) {
                 case dbType_1.DBType.MariaDB:
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
                     require('child_process').execSync(`mariadb --version`).toString().replace('\n', '');
                     break;
                 case dbType_1.DBType.PostgreSQL:
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
                     require('child_process').execSync(`psql --version`).toString().replace('\n', '');
                     break;
                 default:
@@ -36,7 +38,7 @@ class MigrationHandler {
             }
         }
         catch (err) {
-            console.log('No MariaDB client found.');
+            console.log('No MariaDB client found:', err.message);
             process.exit(1);
         }
         const db = (0, connection_1.createNoORMConnection)();
@@ -99,13 +101,16 @@ class MigrationHandler {
                     console.log('executingScript', file);
                 try {
                     if (env_1.env.DB_TYPE === dbType_1.DBType.MariaDB) {
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
                         require('child_process')
                             .execSync(`mysql -u${env_1.env.DB_USER} -p${env_1.env.DB_PASSWORD} -h${env_1.env.DB_HOST} -D${env_1.env.DB_DATABASE} < ${folder}/${file}`)
                             .toString()
                             .replace('\n', '');
                     }
                     else if (env_1.env.DB_TYPE === dbType_1.DBType.PostgreSQL) {
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
                         require('child_process').execSync(`export PGPASSWORD="${env_1.env.DB_PASSWORD}"`).toString().replace('\n', '');
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
                         require('child_process')
                             .execSync(`psql -h ${env_1.env.DB_HOST} -d ${env_1.env.DB_DATABASE} -U ${env_1.env.DB_USER} -p ${env_1.env.DB_PORT} -w -f '${folder}/${file}'`)
                             .toString()

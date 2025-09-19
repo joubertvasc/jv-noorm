@@ -62,9 +62,11 @@ const generate = async () => {
     try {
         switch (env_1.env.DB_TYPE) {
             case dbType_1.DBType.MariaDB:
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
                 require('child_process').execSync(`mariadb --version`).toString().replace('\n', '');
                 break;
             case dbType_1.DBType.PostgreSQL:
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
                 require('child_process').execSync(`psql --version`).toString().replace('\n', '');
                 break;
             default:
@@ -72,7 +74,7 @@ const generate = async () => {
         }
     }
     catch (err) {
-        console.log('No Database Client found');
+        console.log('No Database Client found: ', err.message);
         process.exit(1);
     }
     const db = (0, connection_1.createNoORMConnection)();
