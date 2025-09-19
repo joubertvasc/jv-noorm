@@ -10,7 +10,6 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { format } from 'date-fns';
 import EventEmitter from 'events';
-import { isArray } from 'lodash';
 import { Parser } from 'node-sql-parser';
 
 import { IDBDeleteResult } from '../db/interfaces/IDBDeleteResult';
@@ -36,11 +35,11 @@ export abstract class BaseDB extends EventEmitter {
     this.asyncLocalStorage = asyncLocalStorage;
   }
 
-  public isSoftDelete() {
+  public isSoftDelete(): boolean {
     return this.softDelete;
   }
 
-  public setSoftDelete(useSoftDelete: boolean) {
+  public setSoftDelete(useSoftDelete: boolean): void {
     this.softDelete = useSoftDelete;
   }
 
@@ -109,6 +108,7 @@ export abstract class BaseDB extends EventEmitter {
   }): Promise<IDBDeleteResult> {
     try {
       if ((this.isSoftDelete() || args.options?.softDelete === true) && args.options?.softDelete !== false) {
+        // eslint-disable-next-line no-useless-escape
         const regex = /delete\s+from\s+([`"\[\]\w.]+)/i;
         const match = args.command.match(regex);
         if (match) {

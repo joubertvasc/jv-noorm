@@ -143,13 +143,12 @@ export default class MariaDB extends BaseDB {
       if (!this.pool) throw new DBNotConnectedError();
 
       this.log(args.verboseHeader, args.command);
-      let response;
 
       connection = args.transaction ? (args.transaction as PoolConnection) : await this.pool.getConnection();
       if (!connection) throw new DBNotConnectedError();
 
       const [result] = await connection.execute<ResultSetHeader>(args.command, args.values);
-      response = result ? result : ({} as ResultSetHeader);
+      const response = result ? result : ({} as ResultSetHeader);
 
       this.emitCrudEvent(args.verboseHeader, {
         command: args.command,

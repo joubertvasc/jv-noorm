@@ -175,7 +175,7 @@ export class BasicCrud {
         }
 
         for (let i = 0; i < primaryKey.length; i++) {
-          data[(primaryKey[i] = key[i])];
+          data[primaryKey[i]] = key[i];
         }
       } else {
         data[primaryKey] = key;
@@ -681,10 +681,12 @@ export class BasicCrud {
     return params.data;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async hookBeforeDelete(params: { key: any; transaction?: ConnectionPool }): Promise<boolean> {
     return true;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async hookAfterDelete(params: { key: any; transaction?: ConnectionPool }): Promise<boolean> {
     return true;
   }

@@ -30,6 +30,7 @@ export const createMigration = async (): Promise<void> => {
 
     const scriptName = format(new Date(), 'yyyyMMddHHmmss');
     const file = `${scriptName}_${removeAccents(RemoveInvalidChars(shortName))
+      // eslint-disable-next-line no-useless-escape
       .replace(/['"&^ˆ!@#$%*()<>\[\]\\/,.+=\n\t]/g, '')
       .replace(/[ ]/g, '_')}.sql`;
 
@@ -38,10 +39,12 @@ export const createMigration = async (): Promise<void> => {
       `-- Description: ${shortName}\n--      Script: ${file} \n--   File name: ${scriptName}\n--  Created at: ${format(
         new Date(),
         'dd/MM/yyyy HH:mm',
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
       )}\n--      Author: ${require('os').userInfo().username}\n\n`,
     );
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('child_process')
         .execSync(`code --reuse-window --goto ${folder}/${file}:7:1`)
         .toString()

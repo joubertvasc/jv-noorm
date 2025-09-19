@@ -17,7 +17,7 @@ import { ParseURL } from './shared/utils/ParseURL';
 const databaseURL = ParseURL.parseDBUrl(getEnv('DATABASE_URL', null));
 
 const env: IEnv = {
-  DB_TYPE: getEnv('DB_TYPE', databaseURL?.DB_TYPE || DBType.MariaDB),
+  DB_TYPE: getEnv('DB_TYPE', databaseURL?.DB_TYPE || DBType.MariaDB) as DBType,
   DB_HOST: getEnv('DB_HOST', databaseURL?.DB_HOST || 'localhost'),
   DB_PORT: getNumberEnv(
     'DB_PORT',
@@ -35,7 +35,7 @@ const env: IEnv = {
   MODELS_FOLDER: getEnv('MODELS_FOLDER', `${process.env.PWD}/models`),
 };
 
-function getEnv(key: string, defaultValue: any) {
+function getEnv(key: string, defaultValue: any): string {
   if (!process.env[key]) {
     if (defaultValue !== undefined) {
       return defaultValue;
@@ -47,7 +47,7 @@ function getEnv(key: string, defaultValue: any) {
   return process.env[key];
 }
 
-function getNumberEnv(key: string, defaultValue: number | null) {
+function getNumberEnv(key: string, defaultValue: number | null): number {
   const value = getEnv(key, defaultValue);
 
   if (isNaN(Number(value))) {
@@ -57,7 +57,7 @@ function getNumberEnv(key: string, defaultValue: number | null) {
   return Number(value);
 }
 
-function getBooleanEnv(key: string, defaultValue: boolean | null) {
+function getBooleanEnv(key: string, defaultValue: boolean | null): boolean {
   const value = getEnv(key, defaultValue);
 
   if (typeof value === 'boolean') return value;
@@ -65,30 +65,19 @@ function getBooleanEnv(key: string, defaultValue: boolean | null) {
   if (
     value === null ||
     value === undefined ||
-    (value !== true &&
-      value !== false &&
-      value.toUpperCase() !== 'TRUE' &&
+    (value.toUpperCase() !== 'TRUE' &&
       value.toUpperCase() !== 'FALSE' &&
       value.toUpperCase() !== 'T' &&
       value.toUpperCase() !== 'F' &&
       value.toUpperCase() !== 'S' &&
       value.toUpperCase() !== 'N' &&
       value !== '1' &&
-      value !== 1 &&
-      value !== '0' &&
-      value !== 0)
+      value !== '0')
   ) {
     throw new InvalidValueError(`${key}-INVALID-BOOLEAN`);
   }
 
-  return (
-    value === true ||
-    value === '1' ||
-    value === 1 ||
-    value.toUpperCase() === 'TRUE' ||
-    value.toUpperCase() === 'T' ||
-    value.toUpperCase() === 'S'
-  );
+  return value === '1' || value.toUpperCase() === 'TRUE' || value.toUpperCase() === 'T' || value.toUpperCase() === 'S';
 }
 
 export { env };

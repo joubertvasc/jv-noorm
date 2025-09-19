@@ -13,7 +13,7 @@ import { DBType } from '../enum/dbType';
 import { env } from '../env';
 import { InvalidDBTypeError } from '../shared/errors/invalid-db-type-error';
 
-export const generate = async () => {
+export const generate = async (): Promise<void> => {
   let help = false;
   let override = false;
   let tableName = undefined;
@@ -64,16 +64,18 @@ export const generate = async () => {
   try {
     switch (env.DB_TYPE) {
       case DBType.MariaDB:
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('child_process').execSync(`mariadb --version`).toString().replace('\n', '');
         break;
       case DBType.PostgreSQL:
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('child_process').execSync(`psql --version`).toString().replace('\n', '');
         break;
       default:
         throw new InvalidDBTypeError();
     }
   } catch (err: any) {
-    console.log('No Database Client found');
+    console.log('No Database Client found: ', err.message);
     process.exit(1);
   }
 

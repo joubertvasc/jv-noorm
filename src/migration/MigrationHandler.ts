@@ -25,16 +25,18 @@ export class MigrationHandler {
     try {
       switch (env.DB_TYPE) {
         case DBType.MariaDB:
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           require('child_process').execSync(`mariadb --version`).toString().replace('\n', '');
           break;
         case DBType.PostgreSQL:
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           require('child_process').execSync(`psql --version`).toString().replace('\n', '');
           break;
         default:
           throw new InvalidDBTypeError();
       }
     } catch (err: any) {
-      console.log('No MariaDB client found.');
+      console.log('No MariaDB client found:', err.message);
       process.exit(1);
     }
 
@@ -106,6 +108,7 @@ export class MigrationHandler {
 
         try {
           if (env.DB_TYPE === DBType.MariaDB) {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('child_process')
               .execSync(
                 `mysql -u${env.DB_USER} -p${env.DB_PASSWORD} -h${env.DB_HOST} -D${env.DB_DATABASE} < ${folder}/${file}`,
@@ -113,7 +116,9 @@ export class MigrationHandler {
               .toString()
               .replace('\n', '');
           } else if (env.DB_TYPE === DBType.PostgreSQL) {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('child_process').execSync(`export PGPASSWORD="${env.DB_PASSWORD}"`).toString().replace('\n', '');
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('child_process')
               .execSync(
                 `psql -h ${env.DB_HOST} -d ${env.DB_DATABASE} -U ${env.DB_USER} -p ${env.DB_PORT} -w -f '${folder}/${file}'`,
