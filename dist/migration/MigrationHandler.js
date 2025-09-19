@@ -121,7 +121,7 @@ class MigrationHandler {
                     }
                     if (env_1.env.DB_VERBOSE)
                         console.log('scriptExecuted', file);
-                    await db.insert({ command: 'INSERT INTO migrations (executedScript) value (?)', values: [file] });
+                    await db.insert({ command: 'INSERT INTO migrations (executedScript) VALUES (?)', values: [file] });
                 }
                 catch (err) {
                     if (env_1.env.DB_VERBOSE) {

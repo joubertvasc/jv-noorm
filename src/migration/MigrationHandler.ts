@@ -131,7 +131,7 @@ export class MigrationHandler {
 
           if (env.DB_VERBOSE) console.log('scriptExecuted', file);
 
-          await db.insert({ command: 'INSERT INTO migrations (executedScript) value (?)', values: [file] });
+          await db.insert({ command: 'INSERT INTO migrations (executedScript) VALUES (?)', values: [file] });
         } catch (err: any) {
           if (env.DB_VERBOSE) {
             console.log('scriptFailed', file);
