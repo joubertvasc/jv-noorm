@@ -144,7 +144,6 @@ class BaseDB extends events_1.default {
         const parser = new node_sql_parser_1.Parser();
         let ast = parser.astify(args.command);
         ast = Array.isArray(ast) ? ast : [ast];
-        console.log(ast);
         if (ast[0] && 'table' in ast[0]) {
             args.table = ast[0].table?.[0].table;
             args.columns = ast[0].columns ? ast[0].columns : [];
