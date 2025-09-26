@@ -674,7 +674,7 @@ class BasicCrud {
                 values: uniqueKeyVerificationParams,
             });
             if (exists && exists.amount > 0) {
-                throw new constraint_error_1.ConstraintError('valueAlreadyExistsOnParent value: ' + data[column.columnName] + ' column: column.humanName');
+                throw new constraint_error_1.ConstraintError(`valueAlreadyExistsOnParent value: ${data[column.columnName]} column: ${column.columnName}`);
             }
         }
         return true;

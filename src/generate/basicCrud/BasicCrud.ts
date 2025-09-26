@@ -850,7 +850,7 @@ export class BasicCrud {
 
       if (exists && exists.amount > 0) {
         throw new ConstraintError(
-          'valueAlreadyExistsOnParent value: ' + data[column.columnName] + ' column: column.humanName',
+          `valueAlreadyExistsOnParent value: ${data[column.columnName]} column: ${column.columnName}`,
         );
       }
     }
