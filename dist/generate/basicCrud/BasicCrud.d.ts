@@ -33,6 +33,7 @@ export declare class BasicCrud {
         db: BaseDB;
         keyField?: string;
         listField?: string;
+        softDelete?: boolean;
     });
     create(params: {
         data: Record<string, any>;

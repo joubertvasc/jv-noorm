@@ -45,13 +45,20 @@ export class BasicCrud {
   public keyField: string | undefined;
   public listField: string | undefined;
 
-  public constructor(params: { tableName: string; db: BaseDB; keyField?: string; listField?: string }) {
+  public constructor(params: {
+    tableName: string;
+    db: BaseDB;
+    keyField?: string;
+    listField?: string;
+    softDelete?: boolean;
+  }) {
     const { tableName, db } = params;
     // Optionally store db if needed: this.db = db;
     this.tableName = tableName;
     this.db = db;
     this.isMariaDB = env.DB_TYPE === DBType.MariaDB;
     this.isPostgreSQL = env.DB_TYPE === DBType.PostgreSQL;
+    this.db.setSoftDelete(params.softDelete === true ? true : false);
 
     try {
       if (!db.getMetadata()) throw new DBMetadataNotLoadedError();

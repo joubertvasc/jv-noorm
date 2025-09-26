@@ -38,6 +38,7 @@ class BasicCrud {
         this.db = db;
         this.isMariaDB = env_1.env.DB_TYPE === dbType_1.DBType.MariaDB;
         this.isPostgreSQL = env_1.env.DB_TYPE === dbType_1.DBType.PostgreSQL;
+        this.db.setSoftDelete(params.softDelete === true ? true : false);
         try {
             if (!db.getMetadata())
                 throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
