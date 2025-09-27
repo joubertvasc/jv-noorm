@@ -15,7 +15,7 @@ import { ICrudEvent } from './interfaces/ICrudEvent';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { ILoggedUser } from './interfaces/ILoggedUser';
 import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
-import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from './interfaces/ISchemaMetaDataResultSet';
 export declare abstract class BaseDB extends EventEmitter {
     private softDelete;
     private metadata;
@@ -23,7 +23,7 @@ export declare abstract class BaseDB extends EventEmitter {
     constructor(asyncLocalStorage?: AsyncLocalStorage<any>);
     isSoftDelete(): boolean;
     setSoftDelete(useSoftDelete: boolean): void;
-    getMetadata(): ITableMetaDataResultSet[];
+    getMetadata(): ISchemaMetaDataResultSet[];
     connect(): Promise<any>;
     protected abstract internalConnect(): Promise<any>;
     abstract close(): Promise<any>;
@@ -73,7 +73,7 @@ export declare abstract class BaseDB extends EventEmitter {
     beginTransaction(): Promise<ConnectionPool>;
     abstract commit(transaction: ConnectionPool): Promise<void>;
     abstract rollback(transaction: ConnectionPool): Promise<void>;
-    protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
+    protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]>;
     updateMetadata(): Promise<void>;
     delete(args: {
         command: string;
@@ -81,7 +81,7 @@ export declare abstract class BaseDB extends EventEmitter {
         options?: IDeleteOptions;
         transaction?: ConnectionPool;
     }): Promise<IDBDeleteResult>;
-    getTableMetadata(tableName: string): ITableMetaDataResultSet | null;
+    getTableMetadata(tableName: string): ISchemaMetaDataResultSet | null;
     findCreatedAtColumn(table: string): string | null;
     findUpdatedAtColumn(table: string): string | null;
     findDeletedAtColumn(table: string): string | null;

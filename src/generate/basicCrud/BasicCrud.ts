@@ -12,8 +12,8 @@ import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../../db/ConnectionPool';
 import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
+import { ISchemaMetaDataResultSet } from '../../db/interfaces/ISchemaMetaDataResultSet';
 import { ITableConstraintsResultSet } from '../../db/interfaces/ITableConstraintsResultSet';
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
 import { DBType } from '../../enum/dbType';
 import { DeleteRule } from '../../enum/deleteRule';
 import { Operation } from '../../enum/operations';
@@ -23,10 +23,16 @@ import { ConstraintError } from '../../shared/errors/constraint-error';
 import { DBError } from '../../shared/errors/db-error';
 import { DBMetadataNotLoadedError } from '../../shared/errors/db-metadata-not-loaded';
 import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
+import { FieldSizeExcedeedError } from '../../shared/errors/field-size-excedeed-error';
+import { InvalidDropdownConfigError } from '../../shared/errors/invalid-dropdown-config-error';
 import { InvalidMetadataError } from '../../shared/errors/invalid-metadata-error';
+import { MissingFieldError } from '../../shared/errors/missing-field-error';
 import { TableDoesNotExistsError } from '../../shared/errors/table-does-not-exists-error';
+import { ValueAlreadyNotExistsOnParentError } from '../../shared/errors/value-already-not-exists-on-parent-error';
+import { ValueDoesNotExistsOnParentError } from '../../shared/errors/value-does-not-exists-on-parent-error';
 import { IDropDown } from '../interfaces/IDropDown';
 import { IListResult } from '../interfaces/IListResult';
+import { IMetadata } from '../interfaces/IMetadata';
 
 export interface IPrimaryKeyQuery {
   cmd: string;
@@ -35,7 +41,7 @@ export interface IPrimaryKeyQuery {
 
 export class BasicCrud {
   public tableName: string | undefined;
-  public metadata: ITableMetaDataResultSet | undefined;
+  public schemaMetadata: ISchemaMetaDataResultSet | undefined;
   public db: BaseDB | undefined;
   public createdAtColumn;
   public updatedAtColumn;
@@ -44,6 +50,7 @@ export class BasicCrud {
   public isPostgreSQL: boolean = false;
   public keyField: string | undefined;
   public listField: string | undefined;
+  private metadata: IMetadata[] | undefined;
 
   public constructor(params: {
     tableName: string;
@@ -53,7 +60,7 @@ export class BasicCrud {
     softDelete?: boolean;
   }) {
     const { tableName, db } = params;
-    // Optionally store db if needed: this.db = db;
+
     this.tableName = tableName;
     this.db = db;
     this.isMariaDB = env.DB_TYPE === DBType.MariaDB;
@@ -61,11 +68,11 @@ export class BasicCrud {
     this.db.setSoftDelete(params.softDelete === true ? true : false);
 
     try {
-      if (!db.getMetadata()) throw new DBMetadataNotLoadedError();
+      if (!db.getMetadata()) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
-      this.metadata = db.getMetadata().find(table => table.tableName === tableName);
+      this.schemaMetadata = db.getMetadata().find(table => table.tableName === tableName);
 
-      if (!this.metadata) throw new TableDoesNotExistsError(`${tableName} does-not-exists`);
+      if (!this.schemaMetadata) throw new TableDoesNotExistsError(this.messageForTableDoesNotExistsError(tableName));
 
       this.createdAtColumn = this.db.findCreatedAtColumn(this.tableName as string);
       this.updatedAtColumn = this.db.findUpdatedAtColumn(this.tableName as string);
@@ -85,12 +92,91 @@ export class BasicCrud {
     }
   }
 
+  public setMetadata(metadata: IMetadata[]): void {
+    this.metadata = metadata;
+  }
+
+  public getMetadata(): IMetadata[] | undefined {
+    return this.metadata;
+  }
+
+  public messageForDBNotConnectedError(): string {
+    return 'db-not-connected';
+  }
+
+  public messageForDBMetadataNotLoadedError(): string {
+    return 'db-schemaMetadata-not-loaded';
+  }
+
+  public messageForBadPrimaryKeyFormatError(): string {
+    return 'bad-primary-key-format-error';
+  }
+
+  public messageForTableDoesNotExistsError(tableName: string): string {
+    return `${this.findTableHumanName(tableName)} does-not-exists`;
+  }
+
+  public messageForInvalidMetadataError(key: string, tableName: string): string {
+    return `Column ${this.findColumnHumanName(key, tableName)} does-not-exists-on-table ${this.findTableHumanName(tableName)}`;
+  }
+
+  public messageForConstraintError(tableName: string): string {
+    return `record-in-use-in-table: ${this.findTableHumanName(tableName)}`;
+  }
+
+  public messageForInvalidDropdownConfigError(missingField: string): string {
+    return `${missingField} field-not-defined-for-dropdown-list.`;
+  }
+
+  public messageForMissingFieldError(columnName: string): string {
+    return `field-not-sent: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+  }
+
+  public messageForFieldSizeExcedeedError(columnName: string, maxSize: number): string {
+    return (
+      'fieldSizeExcedeed field: ' +
+      this.findColumnHumanName(columnName, this.tableName || '') +
+      ' maxSize: ' +
+      String(maxSize)
+    );
+  }
+
+  public messageForValueDoesNotExistsOnParentError(columnName: string, tableName: string): string {
+    return `valueDoesNotExistsOnParent value: ${this.findColumnHumanName(columnName, tableName)} ${this.findTableHumanName(tableName)}.`;
+  }
+
+  public messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string {
+    return `valueAlreadyExistsOnParent value: ${value} column: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+  }
+
+  private findTableHumanName(tableName: string): string {
+    if (!this.metadata) return tableName;
+
+    const table = this.metadata.find(m => m.tableName === this.tableName);
+
+    if (!table || !table.columns || table.columns.length === 0) return tableName;
+
+    return table.humanName;
+  }
+
+  private findColumnHumanName(tableName: string, columnName: string): string {
+    if (!this.metadata) return tableName;
+
+    const table = this.metadata.find(m => m.tableName === this.tableName);
+    if (!table || !table.columns || table.columns.length === 0) return tableName;
+
+    const column = table.columns.find(c => c.columnName === columnName);
+    if (!column || !column.humanName) return columnName;
+
+    return column.humanName;
+  }
+
   public async create(params: { data: Record<string, any>; transaction?: ConnectionPool }): Promise<any> {
     let { data } = params;
     const { transaction } = params;
 
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     await this.verifyDataFields(data, Operation.CREATE);
 
@@ -107,11 +193,11 @@ export class BasicCrud {
 
           Object.keys(data).forEach((key: string) => {
             let column: IColumnMetaDataResultSet | undefined;
-            if (this.metadata && this.metadata.columns) {
-              [column] = this.metadata.columns.filter(col => col.columnName === key);
+            if (this.schemaMetadata && this.schemaMetadata.columns) {
+              [column] = this.schemaMetadata.columns.filter(col => col.columnName === key);
             }
 
-            if (!column) throw new InvalidMetadataError();
+            if (!column) throw new InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
 
             if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
               fields.push(key);
@@ -122,11 +208,11 @@ export class BasicCrud {
           });
 
           if (fields.length > 0) {
-            const hasAutoincrement = this.metadata.columns.some(column => {
+            const hasAutoincrement = this.schemaMetadata.columns.some(column => {
               return column.autoIncrement;
             });
 
-            const primaryKey = this.metadata.columns.filter(column => {
+            const primaryKey = this.schemaMetadata.columns.filter(column => {
               return column.primaryKey;
             });
 
@@ -168,8 +254,8 @@ export class BasicCrud {
     let { data } = params;
     const { key, transaction } = params;
 
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     // await this.verifyDataFields(data, Operation.UPDATE);
     if (!(await this.verifyRow(key))) return false;
@@ -178,7 +264,7 @@ export class BasicCrud {
       const primaryKey = this.getTablePrimaryKey();
       if (isArray(primaryKey)) {
         if (primaryKey.length !== key.length) {
-          throw new BadPrimaryKeyFormatError();
+          throw new BadPrimaryKeyFormatError(this.messageForBadPrimaryKeyFormatError());
         }
 
         for (let i = 0; i < primaryKey.length; i++) {
@@ -200,11 +286,13 @@ export class BasicCrud {
 
           Object.keys(data).forEach((key: string) => {
             let column: IColumnMetaDataResultSet | undefined;
-            if (this.metadata && this.metadata.columns) {
-              [column] = this.metadata.columns.filter(column => column.columnName === key);
+            if (this.schemaMetadata && this.schemaMetadata.columns) {
+              [column] = this.schemaMetadata.columns.filter(column => column.columnName === key);
             }
 
-            if (!column) throw new InvalidMetadataError(`Column ${key} does not exists on table ${this.tableName}`);
+            if (!column) {
+              throw new InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
+            }
 
             if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
               fields.push(key);
@@ -246,8 +334,8 @@ export class BasicCrud {
   public async delete(params: { key: any; transaction?: ConnectionPool; options?: IDeleteOptions }): Promise<boolean> {
     const { key, transaction, options } = params;
 
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     try {
       const primaryKeyInfo = this.mountTableWherePrimaryKey(key);
@@ -295,7 +383,7 @@ export class BasicCrud {
                     options,
                   }))
                 ) {
-                  throw new ConstraintError(`record-in-use-in-table: ${cascadeTable.tableName}`);
+                  throw new ConstraintError(this.messageForConstraintError(cascadeTable.tableName));
                 }
               }
             }
@@ -318,8 +406,8 @@ export class BasicCrud {
     primaryKeyInfo: IPrimaryKeyQuery,
     transaction?: ConnectionPool,
   ): Promise<boolean> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     try {
       await this.db.delete({
@@ -338,7 +426,7 @@ export class BasicCrud {
 
         const casedTable = constraints.filter(c => c.tableName.toLowerCase() === table.toLowerCase());
         const resourcedTableName = casedTable && casedTable.length > 0 ? casedTable[0].tableName : table;
-        throw new ConstraintError(`record-in-use-in-table: ${resourcedTableName.tableName}`);
+        throw new ConstraintError(this.messageForConstraintError(resourcedTableName.tableName));
       }
 
       throw new DBError(err.message);
@@ -346,8 +434,8 @@ export class BasicCrud {
   }
 
   private async hanbleDeleteRestrictions(constraint: ITableConstraintsResultSet[], key: any): Promise<boolean> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     const restrict = constraint.filter(c => c.deleteRule === DeleteRule.RESTRICT);
 
@@ -355,7 +443,7 @@ export class BasicCrud {
       for (const restrictTable of restrict) {
         const childCrud = new BasicCrud({ tableName: restrictTable.tableName, db: this.db });
 
-        const referencedColumns = childCrud.metadata?.columns.filter(
+        const referencedColumns = childCrud.schemaMetadata?.columns.filter(
           column => column.referencedTable === this.tableName,
         );
 
@@ -372,7 +460,7 @@ export class BasicCrud {
           })) as unknown;
 
           if (amount.amount > 0) {
-            throw new ConstraintError('recordInUseInTable ' + childCrud.metadata?.tableName);
+            throw new ConstraintError(this.messageForConstraintError(childCrud.schemaMetadata?.tableName || ''));
           }
         }
       }
@@ -387,15 +475,15 @@ export class BasicCrud {
     transaction?: ConnectionPool;
     options?: IDeleteOptions;
   }): Promise<boolean> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
     if (!this.tableName) throw new InvalidMetadataError();
 
     const { key, transaction, options } = params;
 
     const childTable = new BasicCrud({ tableName: params.tableName, db: this.db });
 
-    const referencedColumns = childTable.metadata?.columns.filter(
+    const referencedColumns = childTable.schemaMetadata?.columns.filter(
       column => column.referencedTable && column.referencedTable === this.tableName,
     );
 
@@ -471,12 +559,12 @@ export class BasicCrud {
   }
 
   public async get(params: { key: any; transaction?: ConnectionPool }): Promise<any> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     const primaryKeyInfo = this.mountTableWherePrimaryKey(params.key);
 
-    const columns = this.metadata.columns.map(column => column.columnName);
+    const columns = this.schemaMetadata.columns.map(column => column.columnName);
 
     const query = `SELECT ${columns.join(', ')} 
                      FROM ${this.tableName}
@@ -498,12 +586,12 @@ export class BasicCrud {
     includeAuditingFields?: boolean;
     transaction?: ConnectionPool;
   }): Promise<IListResult> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     const columns: IColumnMetaDataResultSet[] = params?.includeAuditingFields
-      ? this.metadata.columns
-      : this.metadata.columns
+      ? this.schemaMetadata.columns
+      : this.schemaMetadata.columns
           .map(c => {
             if (
               c.columnName !== this.createdAtColumn &&
@@ -602,11 +690,11 @@ export class BasicCrud {
     softDeleted?: boolean;
     transaction?: ConnectionPool;
   }): Promise<IDropDown[]> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
-    if (!this.keyField) throw new InvalidMetadataError('Key field not defined for dropdown list');
-    if (!this.listField) throw new InvalidMetadataError('List field not defined for dropdown list');
+    if (!this.keyField) throw new InvalidDropdownConfigError(this.messageForInvalidDropdownConfigError('Key'));
+    if (!this.listField) throw new InvalidDropdownConfigError(this.messageForInvalidDropdownConfigError('List'));
 
     let sql = `SELECT ${this.keyField} AS value, ${this.listField} AS label
                  FROM ${this.tableName}\n`;
@@ -700,8 +788,8 @@ export class BasicCrud {
 
   // Generic function to verify if a specific row exists on table, based on primary key
   public async verifyRow(key: any, softDeleted: boolean = false): Promise<boolean> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     const primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
 
@@ -720,7 +808,7 @@ export class BasicCrud {
 
   // Generic function to return the where section of a query based on primary key
   public mountTableWherePrimaryKey(key: any, softDeleted: boolean = false): IPrimaryKeyQuery {
-    if (!this.db) throw new DBNotConnectedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
 
     const primaryKey = this.getTablePrimaryKey();
     const values = [];
@@ -730,7 +818,7 @@ export class BasicCrud {
       (!isArray(primaryKey) && isArray(key)) ||
       (isArray(primaryKey) && isArray(key) && primaryKey.length !== key.length)
     ) {
-      throw new BadPrimaryKeyFormatError();
+      throw new BadPrimaryKeyFormatError(this.messageForBadPrimaryKeyFormatError());
     }
 
     let cmd = `${this.deletedAtColumn && !softDeleted ? `${this.deletedAtColumn} IS NULL AND ` : ''}`;
@@ -753,12 +841,12 @@ export class BasicCrud {
 
   // Get table primary key info
   public getTablePrimaryKey(): string | string[] {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     const keys: string[] = [];
 
-    this.metadata.columns.forEach(column => {
+    this.schemaMetadata.columns.forEach(column => {
       if (column.primaryKey) {
         keys.push(column.columnName);
       }
@@ -769,14 +857,14 @@ export class BasicCrud {
 
   // Can be overrided for more controls
   public async verifyDataFields(data: object, operation: Operation, primaryKey?: number): Promise<boolean> {
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
-    this.metadata.columns = this.metadata.columns as IColumnMetaDataResultSet[];
+    this.schemaMetadata.columns = this.schemaMetadata.columns as IColumnMetaDataResultSet[];
 
-    for (const column of this.metadata.columns) {
+    for (const column of this.schemaMetadata.columns) {
       try {
-        await this.verifyField(column, this.metadata, data, operation, primaryKey);
+        await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey);
       } catch (err: any) {
         throw new DBError(err.message);
       }
@@ -785,17 +873,16 @@ export class BasicCrud {
     return true;
   }
 
-  // To be overrided for more control
   public async verifyField(
     column: IColumnMetaDataResultSet,
-    tableMetadata: ITableMetaDataResultSet,
+    tableMetadata: ISchemaMetaDataResultSet,
     data: Record<string, any>,
     operation: Operation,
     primaryKey?: number,
   ): Promise<boolean> {
     // Verify if the field is not nullable. If it's not, verify for a default value
-    if (!this.db) throw new DBNotConnectedError();
-    if (!this.metadata) throw new DBMetadataNotLoadedError();
+    if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
+    if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
     if (!column.isNullable && data[column.columnName] === undefined && !column.autoIncrement && !column.defaultValue) {
       //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
@@ -805,7 +892,7 @@ export class BasicCrud {
       //         : column.defaultValue;
       //   }
       // } else if (column.primaryKey && operation !== Operation.UPDATE) {
-      throw new Error('fieldNotSent: ' + column.columnName); // TODO
+      throw new MissingFieldError(this.messageForMissingFieldError(column.columnName));
     }
 
     // Verify the field size
@@ -814,7 +901,7 @@ export class BasicCrud {
       (column.dataType === 'char' || column.dataType === 'varchar') &&
       data[column.columnName].length > (column.length as number)
     ) {
-      throw new ConstraintError('fieldSizeExcedeed field: ' + column.columnName + ' maxSize: ' + String(column.length));
+      throw new FieldSizeExcedeedError(this.messageForFieldSizeExcedeedError(column.columnName, column.length || 0));
     }
 
     // Verify parent constraint
@@ -828,8 +915,8 @@ export class BasicCrud {
       });
 
       if (!exists || !exists.recordExists) {
-        throw new ConstraintError(
-          'valueDoesNotExistsOnParent value: ' + data[column.columnName] + ' table: ' + tableMetadata.tableName,
+        throw new ValueDoesNotExistsOnParentError(
+          this.messageForValueDoesNotExistsOnParentError(data[column.columnName], tableMetadata.tableName),
         );
       }
     }
@@ -849,8 +936,8 @@ export class BasicCrud {
       });
 
       if (exists && exists.amount > 0) {
-        throw new ConstraintError(
-          `valueAlreadyExistsOnParent value: ${data[column.columnName]} column: ${column.columnName}`,
+        throw new ValueAlreadyNotExistsOnParentError(
+          this.messageForValueAlreadyNotExistsOnParentError(data[column.columnName], column.columnName),
         );
       }
     }

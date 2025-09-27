@@ -14,7 +14,7 @@ import { BaseDB } from '../../db/BaseDB';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from '../../db/interfaces/ISchemaMetaDataResultSet';
 import { env } from '../../env';
 import { DBError } from '../../shared/errors/db-error';
 import { DBSchemaNotDefinedError } from '../../shared/errors/db-schema-not-defined-error';
@@ -232,7 +232,7 @@ export class PostgreSQL extends BaseDB {
     }
   }
 
-  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]> {
+  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]> {
     const result = await this.queryRows({
       sql: `
         WITH table_info AS (
@@ -317,6 +317,6 @@ export class PostgreSQL extends BaseDB {
       transaction,
     });
 
-    return result as unknown as ITableMetaDataResultSet[];
+    return result as unknown as ISchemaMetaDataResultSet[];
   }
 }

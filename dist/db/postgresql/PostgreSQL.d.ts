@@ -11,7 +11,7 @@ import { BaseDB } from '../../db/BaseDB';
 import { IDBDeleteResult } from '../../db/interfaces/IDBDeleteResult';
 import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from '../../db/interfaces/ISchemaMetaDataResultSet';
 import { ConnectionPool } from '../ConnectionPool';
 export declare class PostgreSQL extends BaseDB {
     private pgConnection;
@@ -63,5 +63,5 @@ export declare class PostgreSQL extends BaseDB {
     startTransaction(): Promise<ConnectionPool>;
     commit(transaction: ConnectionPool): Promise<void>;
     rollback(transaction: ConnectionPool): Promise<void>;
-    protected getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
+    protected getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]>;
 }

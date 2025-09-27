@@ -23,11 +23,11 @@ import { ICrudEvent } from './interfaces/ICrudEvent';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { ILoggedUser } from './interfaces/ILoggedUser';
 import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
-import { ITableMetaDataResultSet } from './interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from './interfaces/ISchemaMetaDataResultSet';
 
 export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
-  private metadata: ITableMetaDataResultSet[] | undefined;
+  private metadata: ISchemaMetaDataResultSet[] | undefined;
   protected asyncLocalStorage: AsyncLocalStorage<any> | undefined;
 
   constructor(asyncLocalStorage?: AsyncLocalStorage<any>) {
@@ -43,7 +43,7 @@ export abstract class BaseDB extends EventEmitter {
     this.softDelete = useSoftDelete;
   }
 
-  public getMetadata(): ITableMetaDataResultSet[] {
+  public getMetadata(): ISchemaMetaDataResultSet[] {
     return this.metadata || [];
   }
 
@@ -94,7 +94,7 @@ export abstract class BaseDB extends EventEmitter {
 
   public abstract commit(transaction: ConnectionPool): Promise<void>;
   public abstract rollback(transaction: ConnectionPool): Promise<void>;
-  protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
+  protected abstract getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]>;
 
   public async updateMetadata(): Promise<void> {
     this.metadata = await this.getDBMetadata();
@@ -142,10 +142,10 @@ export abstract class BaseDB extends EventEmitter {
     }
   }
 
-  public getTableMetadata(tableName: string): ITableMetaDataResultSet | null {
+  public getTableMetadata(tableName: string): ISchemaMetaDataResultSet | null {
     if (!this.metadata) return null;
 
-    const tableMetadata: ITableMetaDataResultSet[] = this.metadata?.filter((table: ITableMetaDataResultSet) => {
+    const tableMetadata: ISchemaMetaDataResultSet[] = this.metadata?.filter((table: ISchemaMetaDataResultSet) => {
       return tableName.toLowerCase() === table.tableName.toLowerCase();
     });
 

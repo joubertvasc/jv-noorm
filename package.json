@@ -1,6 +1,6 @@
 {
   "name": "jv-noorm",
-  "version": "0.0.54",
+  "version": "0.0.55",
   "description": "DB access without ORM",
   "main": "dist/index.js",
   "author": "Joubert Vasconcelos",
@@ -164,6 +164,31 @@
       "require": "./dist/shared/errors/constraint-error.js",
       "types": "./dist/shared/errors/constraint-error.d.ts"
     },
+    "./InvalidDropdownConfigError": {
+      "import": "./dist/shared/errors/invalid-dropdown-config-error.js",
+      "require": "./dist/shared/errors/invalid-dropdown-config-error.js",
+      "types": "./dist/shared/errors/invalid-dropdown-config-error.d.ts"
+    },
+    "./MissingFieldError": {
+      "import": "./dist/shared/errors/missing-field-error.js",
+      "require": "./dist/shared/errors/missing-field-error.js",
+      "types": "./dist/shared/errors/missing-field-error.d.ts"
+    },
+    "./FieldSizeExcedeedError": {
+      "import": "./dist/shared/errors/field-size-excedeed-error.js",
+      "require": "./dist/shared/errors/field-size-excedeed-error.js",
+      "types": "./dist/shared/errors/field-size-excedeed-error.d.ts"
+    },
+    "./ValueDoesNotExistsOnParentError": {
+      "import": "./dist/shared/errors/value-does-not-exists-on-parent-error.js",
+      "require": "./dist/shared/errors/value-does-not-exists-on-parent-error.js",
+      "types": "./dist/shared/errors/value-does-not-exists-on-parent-error.d.ts"
+    },
+    "./ValueAlreadyNotExistsOnParentError": {
+      "import": "./dist/shared/errors/value-already-not-exists-on-parent-error.js",
+      "require": "./dist/shared/errors/value-already-not-exists-on-parent-error.js",
+      "types": "./dist/shared/errors/value-already-not-exists-on-parent-error.d.ts"
+    },
     "./DBType": {
       "import": "./dist/enum/dbType.js",
       "require": "./dist/enum/dbType.js",
@@ -219,10 +244,10 @@
       "require": "./dist/db/interfaces/ITableConstraintsResultSet.js",
       "types": "./dist/db/interfaces/ITableConstraintsResultSet.d.ts"
     },
-    "./ITableMetaDataResultSet": {
-      "import": "./dist/db/interfaces/ITableMetaDataResultSet.js",
-      "require": "./dist/db/interfaces/ITableMetaDataResultSet.js",
-      "types": "./dist/db/interfaces/ITableMetaDataResultSet.d.ts"
+    "./ISchemaMetaDataResultSet": {
+      "import": "./dist/db/interfaces/ISchemaMetaDataResultSet.js",
+      "require": "./dist/db/interfaces/ISchemaMetaDataResultSet.js",
+      "types": "./dist/db/interfaces/ISchemaMetaDataResultSet.d.ts"
     },
     "./IDropDown": {
       "import": "./dist/generate/interfaces/IDropDown.js",
@@ -233,6 +258,16 @@
       "import": "./dist/generate/interfaces/IListResult.js",
       "require": "./dist/generate/interfaces/IListResult.js",
       "types": "./dist/generate/interfaces/IListResult.d.ts"
+    },
+    "./IMetadata": {
+      "import": "./dist/generate/interfaces/IMetadata.js",
+      "require": "./dist/generate/interfaces/IMetadata.js",
+      "types": "./dist/generate/interfaces/IMetadata.d.ts"
+    },
+    "./ColumnMetadata": {
+      "import": "./dist/generate/interfaces/IMetadata.js",
+      "require": "./dist/generate/interfaces/IMetadata.js",
+      "types": "./dist/generate/interfaces/IMetadata.d.ts"
     }
   },
   "dependencies": {

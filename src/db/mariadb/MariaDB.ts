@@ -16,7 +16,7 @@ import { DBError } from '../../shared/errors/db-error';
 import { DBNotConnectedError } from '../../shared/errors/db-not-connected-error';
 import { BaseDB } from '../BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
-import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from '../interfaces/ISchemaMetaDataResultSet';
 import { initPool } from './pool';
 
 const MAX_RETRIES = 5;
@@ -336,7 +336,7 @@ export default class MariaDB extends BaseDB {
     }
   }
 
-  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]> {
+  protected async getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]> {
     try {
       const tables = await this.queryRows({
         sql: `
@@ -385,7 +385,7 @@ export default class MariaDB extends BaseDB {
         }
       }
 
-      return (tables as unknown as ITableMetaDataResultSet[]) ?? [];
+      return (tables as unknown as ISchemaMetaDataResultSet[]) ?? [];
     } catch (err: any) {
       throw new DBError(err.message);
     }

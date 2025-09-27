@@ -11,7 +11,7 @@ import { IDBInsertResult } from '../../db/interfaces/IDBInsertResult';
 import { IDBUpdateResult } from '../../db/interfaces/IDBUpdateResult';
 import { BaseDB } from '../BaseDB';
 import { ConnectionPool } from '../ConnectionPool';
-import { ITableMetaDataResultSet } from '../interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from '../interfaces/ISchemaMetaDataResultSet';
 export default class MariaDB extends BaseDB {
     private pool;
     retries: number;
@@ -65,5 +65,5 @@ export default class MariaDB extends BaseDB {
     startTransaction(): Promise<ConnectionPool>;
     commit(transaction: ConnectionPool): Promise<void>;
     rollback(transaction: ConnectionPool): Promise<void>;
-    protected getDBMetadata(transaction?: ConnectionPool): Promise<ITableMetaDataResultSet[]>;
+    protected getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]>;
 }

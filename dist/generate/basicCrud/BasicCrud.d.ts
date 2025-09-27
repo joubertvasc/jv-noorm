@@ -9,17 +9,18 @@ import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../../db/ConnectionPool';
 import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
 import { IDeleteOptions } from '../../db/interfaces/IDeleteOptions';
-import { ITableMetaDataResultSet } from '../../db/interfaces/ITableMetaDataResultSet';
+import { ISchemaMetaDataResultSet } from '../../db/interfaces/ISchemaMetaDataResultSet';
 import { Operation } from '../../enum/operations';
 import { IDropDown } from '../interfaces/IDropDown';
 import { IListResult } from '../interfaces/IListResult';
+import { IMetadata } from '../interfaces/IMetadata';
 export interface IPrimaryKeyQuery {
     cmd: string;
     values: any[];
 }
 export declare class BasicCrud {
     tableName: string | undefined;
-    metadata: ITableMetaDataResultSet | undefined;
+    schemaMetadata: ISchemaMetaDataResultSet | undefined;
     db: BaseDB | undefined;
     createdAtColumn: string | null;
     updatedAtColumn: string | null;
@@ -28,6 +29,7 @@ export declare class BasicCrud {
     isPostgreSQL: boolean;
     keyField: string | undefined;
     listField: string | undefined;
+    private metadata;
     constructor(params: {
         tableName: string;
         db: BaseDB;
@@ -35,6 +37,21 @@ export declare class BasicCrud {
         listField?: string;
         softDelete?: boolean;
     });
+    setMetadata(metadata: IMetadata[]): void;
+    getMetadata(): IMetadata[] | undefined;
+    messageForDBNotConnectedError(): string;
+    messageForDBMetadataNotLoadedError(): string;
+    messageForBadPrimaryKeyFormatError(): string;
+    messageForTableDoesNotExistsError(tableName: string): string;
+    messageForInvalidMetadataError(key: string, tableName: string): string;
+    messageForConstraintError(tableName: string): string;
+    messageForInvalidDropdownConfigError(missingField: string): string;
+    messageForMissingFieldError(columnName: string): string;
+    messageForFieldSizeExcedeedError(columnName: string, maxSize: number): string;
+    messageForValueDoesNotExistsOnParentError(columnName: string, tableName: string): string;
+    messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string;
+    private findTableHumanName;
+    private findColumnHumanName;
     create(params: {
         data: Record<string, any>;
         transaction?: ConnectionPool;
@@ -116,5 +133,5 @@ export declare class BasicCrud {
     mountTableWherePrimaryKey(key: any, softDeleted?: boolean): IPrimaryKeyQuery;
     getTablePrimaryKey(): string | string[];
     verifyDataFields(data: object, operation: Operation, primaryKey?: number): Promise<boolean>;
-    verifyField(column: IColumnMetaDataResultSet, tableMetadata: ITableMetaDataResultSet, data: Record<string, any>, operation: Operation, primaryKey?: number): Promise<boolean>;
+    verifyField(column: IColumnMetaDataResultSet, tableMetadata: ISchemaMetaDataResultSet, data: Record<string, any>, operation: Operation, primaryKey?: number): Promise<boolean>;
 }

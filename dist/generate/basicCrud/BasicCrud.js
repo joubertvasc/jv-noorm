@@ -18,11 +18,16 @@ const constraint_error_1 = require("../../shared/errors/constraint-error");
 const db_error_1 = require("../../shared/errors/db-error");
 const db_metadata_not_loaded_1 = require("../../shared/errors/db-metadata-not-loaded");
 const db_not_connected_error_1 = require("../../shared/errors/db-not-connected-error");
+const field_size_excedeed_error_1 = require("../../shared/errors/field-size-excedeed-error");
+const invalid_dropdown_config_error_1 = require("../../shared/errors/invalid-dropdown-config-error");
 const invalid_metadata_error_1 = require("../../shared/errors/invalid-metadata-error");
+const missing_field_error_1 = require("../../shared/errors/missing-field-error");
 const table_does_not_exists_error_1 = require("../../shared/errors/table-does-not-exists-error");
+const value_already_not_exists_on_parent_error_1 = require("../../shared/errors/value-already-not-exists-on-parent-error");
+const value_does_not_exists_on_parent_error_1 = require("../../shared/errors/value-does-not-exists-on-parent-error");
 class BasicCrud {
     tableName;
-    metadata;
+    schemaMetadata;
     db;
     createdAtColumn;
     updatedAtColumn;
@@ -31,9 +36,9 @@ class BasicCrud {
     isPostgreSQL = false;
     keyField;
     listField;
+    metadata;
     constructor(params) {
         const { tableName, db } = params;
-        // Optionally store db if needed: this.db = db;
         this.tableName = tableName;
         this.db = db;
         this.isMariaDB = env_1.env.DB_TYPE === dbType_1.DBType.MariaDB;
@@ -41,10 +46,10 @@ class BasicCrud {
         this.db.setSoftDelete(params.softDelete === true ? true : false);
         try {
             if (!db.getMetadata())
-                throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
-            this.metadata = db.getMetadata().find(table => table.tableName === tableName);
-            if (!this.metadata)
-                throw new table_does_not_exists_error_1.TableDoesNotExistsError(`${tableName} does-not-exists`);
+                throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
+            this.schemaMetadata = db.getMetadata().find(table => table.tableName === tableName);
+            if (!this.schemaMetadata)
+                throw new table_does_not_exists_error_1.TableDoesNotExistsError(this.messageForTableDoesNotExistsError(tableName));
             this.createdAtColumn = this.db.findCreatedAtColumn(this.tableName);
             this.updatedAtColumn = this.db.findUpdatedAtColumn(this.tableName);
             this.deletedAtColumn = this.db.findDeletedAtColumn(this.tableName);
@@ -63,13 +68,74 @@ class BasicCrud {
             throw new Error(err.message);
         }
     }
+    setMetadata(metadata) {
+        this.metadata = metadata;
+    }
+    getMetadata() {
+        return this.metadata;
+    }
+    messageForDBNotConnectedError() {
+        return 'db-not-connected';
+    }
+    messageForDBMetadataNotLoadedError() {
+        return 'db-schemaMetadata-not-loaded';
+    }
+    messageForBadPrimaryKeyFormatError() {
+        return 'bad-primary-key-format-error';
+    }
+    messageForTableDoesNotExistsError(tableName) {
+        return `${this.findTableHumanName(tableName)} does-not-exists`;
+    }
+    messageForInvalidMetadataError(key, tableName) {
+        return `Column ${this.findColumnHumanName(key, tableName)} does-not-exists-on-table ${this.findTableHumanName(tableName)}`;
+    }
+    messageForConstraintError(tableName) {
+        return `record-in-use-in-table: ${this.findTableHumanName(tableName)}`;
+    }
+    messageForInvalidDropdownConfigError(missingField) {
+        return `${missingField} field-not-defined-for-dropdown-list.`;
+    }
+    messageForMissingFieldError(columnName) {
+        return `field-not-sent: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+    }
+    messageForFieldSizeExcedeedError(columnName, maxSize) {
+        return ('fieldSizeExcedeed field: ' +
+            this.findColumnHumanName(columnName, this.tableName || '') +
+            ' maxSize: ' +
+            String(maxSize));
+    }
+    messageForValueDoesNotExistsOnParentError(columnName, tableName) {
+        return `valueDoesNotExistsOnParent value: ${this.findColumnHumanName(columnName, tableName)} ${this.findTableHumanName(tableName)}.`;
+    }
+    messageForValueAlreadyNotExistsOnParentError(value, columnName) {
+        return `valueAlreadyExistsOnParent value: ${value} column: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+    }
+    findTableHumanName(tableName) {
+        if (!this.metadata)
+            return tableName;
+        const table = this.metadata.find(m => m.tableName === this.tableName);
+        if (!table || !table.columns || table.columns.length === 0)
+            return tableName;
+        return table.humanName;
+    }
+    findColumnHumanName(tableName, columnName) {
+        if (!this.metadata)
+            return tableName;
+        const table = this.metadata.find(m => m.tableName === this.tableName);
+        if (!table || !table.columns || table.columns.length === 0)
+            return tableName;
+        const column = table.columns.find(c => c.columnName === columnName);
+        if (!column || !column.humanName)
+            return columnName;
+        return column.humanName;
+    }
     async create(params) {
         let { data } = params;
         const { transaction } = params;
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         await this.verifyDataFields(data, operations_1.Operation.CREATE);
         try {
             data = await this.hookBeforeCreate({ data, transaction });
@@ -82,11 +148,11 @@ class BasicCrud {
                     let idx = 1;
                     Object.keys(data).forEach((key) => {
                         let column;
-                        if (this.metadata && this.metadata.columns) {
-                            [column] = this.metadata.columns.filter(col => col.columnName === key);
+                        if (this.schemaMetadata && this.schemaMetadata.columns) {
+                            [column] = this.schemaMetadata.columns.filter(col => col.columnName === key);
                         }
                         if (!column)
-                            throw new invalid_metadata_error_1.InvalidMetadataError();
+                            throw new invalid_metadata_error_1.InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
                         if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
                             fields.push(key);
                             values.push(data[key]);
@@ -95,10 +161,10 @@ class BasicCrud {
                         }
                     });
                     if (fields.length > 0) {
-                        const hasAutoincrement = this.metadata.columns.some(column => {
+                        const hasAutoincrement = this.schemaMetadata.columns.some(column => {
                             return column.autoIncrement;
                         });
-                        const primaryKey = this.metadata.columns.filter(column => {
+                        const primaryKey = this.schemaMetadata.columns.filter(column => {
                             return column.primaryKey;
                         });
                         const hasUUID = primaryKey && primaryKey.length === 1 && primaryKey[0].columnType.toLowerCase() === 'uuid';
@@ -132,9 +198,9 @@ class BasicCrud {
         let { data } = params;
         const { key, transaction } = params;
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         // await this.verifyDataFields(data, Operation.UPDATE);
         if (!(await this.verifyRow(key)))
             return false;
@@ -142,7 +208,7 @@ class BasicCrud {
             const primaryKey = this.getTablePrimaryKey();
             if ((0, lodash_1.isArray)(primaryKey)) {
                 if (primaryKey.length !== key.length) {
-                    throw new bad_primary_key_format_error_1.BadPrimaryKeyFormatError();
+                    throw new bad_primary_key_format_error_1.BadPrimaryKeyFormatError(this.messageForBadPrimaryKeyFormatError());
                 }
                 for (let i = 0; i < primaryKey.length; i++) {
                     data[primaryKey[i]] = key[i];
@@ -161,11 +227,12 @@ class BasicCrud {
                     const values = [];
                     Object.keys(data).forEach((key) => {
                         let column;
-                        if (this.metadata && this.metadata.columns) {
-                            [column] = this.metadata.columns.filter(column => column.columnName === key);
+                        if (this.schemaMetadata && this.schemaMetadata.columns) {
+                            [column] = this.schemaMetadata.columns.filter(column => column.columnName === key);
                         }
-                        if (!column)
-                            throw new invalid_metadata_error_1.InvalidMetadataError(`Column ${key} does not exists on table ${this.tableName}`);
+                        if (!column) {
+                            throw new invalid_metadata_error_1.InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
+                        }
                         if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
                             fields.push(key);
                             values.push(data[key]);
@@ -199,9 +266,9 @@ class BasicCrud {
     async delete(params) {
         const { key, transaction, options } = params;
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         try {
             const primaryKeyInfo = this.mountTableWherePrimaryKey(key);
             const constraints = this.db.getTableReferencedConstraints(this.tableName);
@@ -242,7 +309,7 @@ class BasicCrud {
                                     transaction,
                                     options,
                                 }))) {
-                                    throw new constraint_error_1.ConstraintError(`record-in-use-in-table: ${cascadeTable.tableName}`);
+                                    throw new constraint_error_1.ConstraintError(this.messageForConstraintError(cascadeTable.tableName));
                                 }
                             }
                         }
@@ -263,9 +330,9 @@ class BasicCrud {
     }
     async handleHardDelete(constraints, primaryKeyInfo, transaction) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         try {
             await this.db.delete({
                 command: `DELETE FROM ${this.tableName} WHERE ${primaryKeyInfo.cmd}`,
@@ -281,21 +348,21 @@ class BasicCrud {
                 table = table.substr(0, table.indexOf('`'));
                 const casedTable = constraints.filter(c => c.tableName.toLowerCase() === table.toLowerCase());
                 const resourcedTableName = casedTable && casedTable.length > 0 ? casedTable[0].tableName : table;
-                throw new constraint_error_1.ConstraintError(`record-in-use-in-table: ${resourcedTableName.tableName}`);
+                throw new constraint_error_1.ConstraintError(this.messageForConstraintError(resourcedTableName.tableName));
             }
             throw new db_error_1.DBError(err.message);
         }
     }
     async hanbleDeleteRestrictions(constraint, key) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         const restrict = constraint.filter(c => c.deleteRule === deleteRule_1.DeleteRule.RESTRICT);
         if (restrict && restrict.length > 0) {
             for (const restrictTable of restrict) {
                 const childCrud = new BasicCrud({ tableName: restrictTable.tableName, db: this.db });
-                const referencedColumns = childCrud.metadata?.columns.filter(column => column.referencedTable === this.tableName);
+                const referencedColumns = childCrud.schemaMetadata?.columns.filter(column => column.referencedTable === this.tableName);
                 if (referencedColumns && referencedColumns.length > 0) {
                     let where = `WHERE ${this.deletedAtColumn} IS NULL\n`;
                     referencedColumns.forEach(column => {
@@ -306,7 +373,7 @@ class BasicCrud {
                         values: (0, lodash_1.isArray)(key) ? key : [key],
                     }));
                     if (amount.amount > 0) {
-                        throw new constraint_error_1.ConstraintError('recordInUseInTable ' + childCrud.metadata?.tableName);
+                        throw new constraint_error_1.ConstraintError(this.messageForConstraintError(childCrud.schemaMetadata?.tableName || ''));
                     }
                 }
             }
@@ -315,14 +382,14 @@ class BasicCrud {
     }
     async deleteRecursively(params) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         if (!this.tableName)
             throw new invalid_metadata_error_1.InvalidMetadataError();
         const { key, transaction, options } = params;
         const childTable = new BasicCrud({ tableName: params.tableName, db: this.db });
-        const referencedColumns = childTable.metadata?.columns.filter(column => column.referencedTable && column.referencedTable === this.tableName);
+        const referencedColumns = childTable.schemaMetadata?.columns.filter(column => column.referencedTable && column.referencedTable === this.tableName);
         if (referencedColumns && referencedColumns.length > 0) {
             let where = '';
             referencedColumns.forEach(column => {
@@ -386,11 +453,11 @@ class BasicCrud {
     }
     async get(params) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         const primaryKeyInfo = this.mountTableWherePrimaryKey(params.key);
-        const columns = this.metadata.columns.map(column => column.columnName);
+        const columns = this.schemaMetadata.columns.map(column => column.columnName);
         const query = `SELECT ${columns.join(', ')} 
                      FROM ${this.tableName}
                     WHERE ${primaryKeyInfo.cmd}`;
@@ -398,12 +465,12 @@ class BasicCrud {
     }
     async list(params) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         const columns = params?.includeAuditingFields
-            ? this.metadata.columns
-            : this.metadata.columns
+            ? this.schemaMetadata.columns
+            : this.schemaMetadata.columns
                 .map(c => {
                 if (c.columnName !== this.createdAtColumn &&
                     c.columnName !== this.updatedAtColumn &&
@@ -482,13 +549,13 @@ class BasicCrud {
     }
     async dropdownList(params) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         if (!this.keyField)
-            throw new invalid_metadata_error_1.InvalidMetadataError('Key field not defined for dropdown list');
+            throw new invalid_dropdown_config_error_1.InvalidDropdownConfigError(this.messageForInvalidDropdownConfigError('Key'));
         if (!this.listField)
-            throw new invalid_metadata_error_1.InvalidMetadataError('List field not defined for dropdown list');
+            throw new invalid_dropdown_config_error_1.InvalidDropdownConfigError(this.messageForInvalidDropdownConfigError('List'));
         let sql = `SELECT ${this.keyField} AS value, ${this.listField} AS label
                  FROM ${this.tableName}\n`;
         const conditions = [];
@@ -551,9 +618,9 @@ class BasicCrud {
     // Generic function to verify if a specific row exists on table, based on primary key
     async verifyRow(key, softDeleted = false) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         const primaryKeyInfo = this.mountTableWherePrimaryKey(key, softDeleted);
         const queryCmd = `SELECT COUNT(*) AS amount 
                       FROM ${this.tableName} 
@@ -569,13 +636,13 @@ class BasicCrud {
     // Generic function to return the where section of a query based on primary key
     mountTableWherePrimaryKey(key, softDeleted = false) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
         const primaryKey = this.getTablePrimaryKey();
         const values = [];
         if (((0, lodash_1.isArray)(primaryKey) && !(0, lodash_1.isArray)(key)) ||
             (!(0, lodash_1.isArray)(primaryKey) && (0, lodash_1.isArray)(key)) ||
             ((0, lodash_1.isArray)(primaryKey) && (0, lodash_1.isArray)(key) && primaryKey.length !== key.length)) {
-            throw new bad_primary_key_format_error_1.BadPrimaryKeyFormatError();
+            throw new bad_primary_key_format_error_1.BadPrimaryKeyFormatError(this.messageForBadPrimaryKeyFormatError());
         }
         let cmd = `${this.deletedAtColumn && !softDeleted ? `${this.deletedAtColumn} IS NULL AND ` : ''}`;
         if (!(0, lodash_1.isArray)(primaryKey)) {
@@ -596,11 +663,11 @@ class BasicCrud {
     // Get table primary key info
     getTablePrimaryKey() {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         const keys = [];
-        this.metadata.columns.forEach(column => {
+        this.schemaMetadata.columns.forEach(column => {
             if (column.primaryKey) {
                 keys.push(column.columnName);
             }
@@ -610,13 +677,13 @@ class BasicCrud {
     // Can be overrided for more controls
     async verifyDataFields(data, operation, primaryKey) {
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
-        this.metadata.columns = this.metadata.columns;
-        for (const column of this.metadata.columns) {
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
+        this.schemaMetadata.columns = this.schemaMetadata.columns;
+        for (const column of this.schemaMetadata.columns) {
             try {
-                await this.verifyField(column, this.metadata, data, operation, primaryKey);
+                await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey);
             }
             catch (err) {
                 throw new db_error_1.DBError(err.message);
@@ -624,13 +691,12 @@ class BasicCrud {
         }
         return true;
     }
-    // To be overrided for more control
     async verifyField(column, tableMetadata, data, operation, primaryKey) {
         // Verify if the field is not nullable. If it's not, verify for a default value
         if (!this.db)
-            throw new db_not_connected_error_1.DBNotConnectedError();
-        if (!this.metadata)
-            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError();
+            throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
+        if (!this.schemaMetadata)
+            throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
         if (!column.isNullable && data[column.columnName] === undefined && !column.autoIncrement && !column.defaultValue) {
             //   if (this.createdAtColumn && column.columnName !== this.createdAtColumn) {
             //     data[column.columnName] =
@@ -639,13 +705,13 @@ class BasicCrud {
             //         : column.defaultValue;
             //   }
             // } else if (column.primaryKey && operation !== Operation.UPDATE) {
-            throw new Error('fieldNotSent: ' + column.columnName); // TODO
+            throw new missing_field_error_1.MissingFieldError(this.messageForMissingFieldError(column.columnName));
         }
         // Verify the field size
         if (data[column.columnName] &&
             (column.dataType === 'char' || column.dataType === 'varchar') &&
             data[column.columnName].length > column.length) {
-            throw new constraint_error_1.ConstraintError('fieldSizeExcedeed field: ' + column.columnName + ' maxSize: ' + String(column.length));
+            throw new field_size_excedeed_error_1.FieldSizeExcedeedError(this.messageForFieldSizeExcedeedError(column.columnName, column.length || 0));
         }
         // Verify parent constraint
         if (data[column.columnName] && column.referencedTable && column.referencedColumn) {
@@ -657,7 +723,7 @@ class BasicCrud {
                 values: [data[column.columnName]],
             });
             if (!exists || !exists.recordExists) {
-                throw new constraint_error_1.ConstraintError('valueDoesNotExistsOnParent value: ' + data[column.columnName] + ' table: ' + tableMetadata.tableName);
+                throw new value_does_not_exists_on_parent_error_1.ValueDoesNotExistsOnParentError(this.messageForValueDoesNotExistsOnParentError(data[column.columnName], tableMetadata.tableName));
             }
         }
         // Verify Unique Key
@@ -674,7 +740,7 @@ class BasicCrud {
                 values: uniqueKeyVerificationParams,
             });
             if (exists && exists.amount > 0) {
-                throw new constraint_error_1.ConstraintError(`valueAlreadyExistsOnParent value: ${data[column.columnName]} column: ${column.columnName}`);
+                throw new value_already_not_exists_on_parent_error_1.ValueAlreadyNotExistsOnParentError(this.messageForValueAlreadyNotExistsOnParentError(data[column.columnName], column.columnName));
             }
         }
         return true;
