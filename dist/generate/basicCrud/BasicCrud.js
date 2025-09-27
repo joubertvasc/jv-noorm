@@ -113,7 +113,7 @@ class BasicCrud {
     findColumnHumanName(columnName, tableName) {
         if (!this.metadata)
             return columnName;
-        const table = this.metadata.find(m => m.tableName === tableName || this.tableName);
+        const table = this.metadata.find(m => m.tableName === (tableName || this.tableName));
         if (!table || !table.columns || table.columns.length === 0)
             return columnName;
         const column = table.columns.find(c => c.columnName === columnName);
