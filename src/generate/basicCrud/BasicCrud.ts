@@ -58,14 +58,16 @@ export class BasicCrud {
     keyField?: string;
     listField?: string;
     softDelete?: boolean;
+    metadata?: IMetadata[];
   }) {
-    const { tableName, db } = params;
+    const { tableName, db, keyField, listField, softDelete, metadata } = params;
 
     this.tableName = tableName;
     this.db = db;
     this.isMariaDB = env.DB_TYPE === DBType.MariaDB;
     this.isPostgreSQL = env.DB_TYPE === DBType.PostgreSQL;
-    this.db.setSoftDelete(params.softDelete === true ? true : false);
+    this.db.setSoftDelete(softDelete === true ? true : false);
+    this.metadata = metadata;
 
     try {
       if (!db.getMetadata()) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
@@ -78,10 +80,10 @@ export class BasicCrud {
       this.createdAtColumn = this.db.findCreatedAtColumn(this.tableName as string);
       this.updatedAtColumn = this.db.findUpdatedAtColumn(this.tableName as string);
       this.deletedAtColumn = this.db.findDeletedAtColumn(this.tableName as string);
-      this.listField = params.listField;
+      this.listField = listField;
 
-      if (params.keyField) {
-        this.keyField = params.keyField;
+      if (keyField) {
+        this.keyField = keyField;
       } else {
         const primaryKey = this.getTablePrimaryKey();
         if (!isArray(primaryKey)) {
@@ -91,14 +93,6 @@ export class BasicCrud {
     } catch (err: any) {
       throw new Error(err.message);
     }
-  }
-
-  public setMetadata(metadata: IMetadata[]): void {
-    this.metadata = metadata;
-  }
-
-  public getMetadata(): IMetadata[] | undefined {
-    return this.metadata;
   }
 
   public messageForDBNotConnectedError(): string {

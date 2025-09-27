@@ -38,12 +38,13 @@ class BasicCrud {
     listField;
     metadata;
     constructor(params) {
-        const { tableName, db } = params;
+        const { tableName, db, keyField, listField, softDelete, metadata } = params;
         this.tableName = tableName;
         this.db = db;
         this.isMariaDB = env_1.env.DB_TYPE === dbType_1.DBType.MariaDB;
         this.isPostgreSQL = env_1.env.DB_TYPE === dbType_1.DBType.PostgreSQL;
-        this.db.setSoftDelete(params.softDelete === true ? true : false);
+        this.db.setSoftDelete(softDelete === true ? true : false);
+        this.metadata = metadata;
         try {
             if (!db.getMetadata())
                 throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
@@ -53,9 +54,9 @@ class BasicCrud {
             this.createdAtColumn = this.db.findCreatedAtColumn(this.tableName);
             this.updatedAtColumn = this.db.findUpdatedAtColumn(this.tableName);
             this.deletedAtColumn = this.db.findDeletedAtColumn(this.tableName);
-            this.listField = params.listField;
-            if (params.keyField) {
-                this.keyField = params.keyField;
+            this.listField = listField;
+            if (keyField) {
+                this.keyField = keyField;
             }
             else {
                 const primaryKey = this.getTablePrimaryKey();
@@ -67,12 +68,6 @@ class BasicCrud {
         catch (err) {
             throw new Error(err.message);
         }
-    }
-    setMetadata(metadata) {
-        this.metadata = metadata;
-    }
-    getMetadata() {
-        return this.metadata;
     }
     messageForDBNotConnectedError() {
         return 'db-not-connected';

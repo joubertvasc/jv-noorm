@@ -36,9 +36,8 @@ export declare class BasicCrud {
         keyField?: string;
         listField?: string;
         softDelete?: boolean;
+        metadata?: IMetadata[];
     });
-    setMetadata(metadata: IMetadata[]): void;
-    getMetadata(): IMetadata[] | undefined;
     messageForDBNotConnectedError(): string;
     messageForDBMetadataNotLoadedError(): string;
     messageForBadPrimaryKeyFormatError(): string;
