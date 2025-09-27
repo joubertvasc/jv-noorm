@@ -23,7 +23,7 @@ const invalid_dropdown_config_error_1 = require("../../shared/errors/invalid-dro
 const invalid_metadata_error_1 = require("../../shared/errors/invalid-metadata-error");
 const missing_field_error_1 = require("../../shared/errors/missing-field-error");
 const table_does_not_exists_error_1 = require("../../shared/errors/table-does-not-exists-error");
-const value_already_not_exists_on_parent_error_1 = require("../../shared/errors/value-already-not-exists-on-parent-error");
+const value_already_exists_on_parent_error_1 = require("../../shared/errors/value-already-exists-on-parent-error");
 const value_does_not_exists_on_parent_error_1 = require("../../shared/errors/value-does-not-exists-on-parent-error");
 class BasicCrud {
     tableName;
@@ -104,7 +104,7 @@ class BasicCrud {
     messageForValueDoesNotExistsOnParentError(value, tableName) {
         return `valueDoesNotExistsOnParent value: ${value} column: ${tableName}.`;
     }
-    messageForValueAlreadyNotExistsOnParentError(value, columnName) {
+    messageForValueAlreadyExistsOnParentError(value, columnName) {
         return `valueAlreadyExistsOnParent value: ${value} column: ${columnName}`;
     }
     findTableHumanName(tableName) {
@@ -742,7 +742,7 @@ class BasicCrud {
                 values: uniqueKeyVerificationParams,
             });
             if (exists && exists.amount > 0) {
-                throw new value_already_not_exists_on_parent_error_1.ValueAlreadyNotExistsOnParentError(this.messageForValueAlreadyNotExistsOnParentError(data[column.columnName], this.findColumnHumanName(column.columnName)));
+                throw new value_already_exists_on_parent_error_1.ValueAlreadyExistsOnParentError(this.messageForValueAlreadyExistsOnParentError(data[column.columnName], this.findColumnHumanName(column.columnName)));
             }
         }
         return true;

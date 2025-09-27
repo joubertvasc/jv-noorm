@@ -28,7 +28,7 @@ import { InvalidDropdownConfigError } from '../../shared/errors/invalid-dropdown
 import { InvalidMetadataError } from '../../shared/errors/invalid-metadata-error';
 import { MissingFieldError } from '../../shared/errors/missing-field-error';
 import { TableDoesNotExistsError } from '../../shared/errors/table-does-not-exists-error';
-import { ValueAlreadyNotExistsOnParentError } from '../../shared/errors/value-already-not-exists-on-parent-error';
+import { ValueAlreadyExistsOnParentError } from '../../shared/errors/value-already-exists-on-parent-error';
 import { ValueDoesNotExistsOnParentError } from '../../shared/errors/value-does-not-exists-on-parent-error';
 import { IDropDown } from '../interfaces/IDropDown';
 import { IListResult } from '../interfaces/IListResult';
@@ -141,7 +141,7 @@ export class BasicCrud {
     return `valueDoesNotExistsOnParent value: ${value} column: ${tableName}.`;
   }
 
-  public messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string {
+  public messageForValueAlreadyExistsOnParentError(value: string, columnName: string): string {
     return `valueAlreadyExistsOnParent value: ${value} column: ${columnName}`;
   }
 
@@ -954,8 +954,8 @@ export class BasicCrud {
       });
 
       if (exists && exists.amount > 0) {
-        throw new ValueAlreadyNotExistsOnParentError(
-          this.messageForValueAlreadyNotExistsOnParentError(
+        throw new ValueAlreadyExistsOnParentError(
+          this.messageForValueAlreadyExistsOnParentError(
             data[column.columnName],
             this.findColumnHumanName(column.columnName),
           ),

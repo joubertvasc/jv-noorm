@@ -184,10 +184,10 @@
       "require": "./dist/shared/errors/value-does-not-exists-on-parent-error.js",
       "types": "./dist/shared/errors/value-does-not-exists-on-parent-error.d.ts"
     },
-    "./ValueAlreadyNotExistsOnParentError": {
-      "import": "./dist/shared/errors/value-already-not-exists-on-parent-error.js",
-      "require": "./dist/shared/errors/value-already-not-exists-on-parent-error.js",
-      "types": "./dist/shared/errors/value-already-not-exists-on-parent-error.d.ts"
+    "./ValueAlreadyExistsOnParentError": {
+      "import": "./dist/shared/errors/value-already-exists-on-parent-error.js",
+      "require": "./dist/shared/errors/value-already-exists-on-parent-error.js",
+      "types": "./dist/shared/errors/value-already-exists-on-parent-error.d.ts"
     },
     "./DBType": {
       "import": "./dist/enum/dbType.js",

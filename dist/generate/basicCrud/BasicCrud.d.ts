@@ -49,7 +49,7 @@ export declare class BasicCrud {
     messageForMissingFieldError(columnName: string): string;
     messageForFieldSizeExcedeedError(columnName: string, maxSize: number): string;
     messageForValueDoesNotExistsOnParentError(value: string, tableName: string): string;
-    messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string;
+    messageForValueAlreadyExistsOnParentError(value: string, columnName: string): string;
     private findTableHumanName;
     private findColumnHumanName;
     create(params: {
