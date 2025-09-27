@@ -48,7 +48,7 @@ export declare class BasicCrud {
     messageForInvalidDropdownConfigError(missingField: string): string;
     messageForMissingFieldError(columnName: string): string;
     messageForFieldSizeExcedeedError(columnName: string, maxSize: number): string;
-    messageForValueDoesNotExistsOnParentError(columnName: string, tableName: string): string;
+    messageForValueDoesNotExistsOnParentError(value: string, tableName: string): string;
     messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string;
     private findTableHumanName;
     private findColumnHumanName;

@@ -72,7 +72,8 @@ export class BasicCrud {
 
       this.schemaMetadata = db.getMetadata().find(table => table.tableName === tableName);
 
-      if (!this.schemaMetadata) throw new TableDoesNotExistsError(this.messageForTableDoesNotExistsError(tableName));
+      if (!this.schemaMetadata)
+        throw new TableDoesNotExistsError(this.messageForTableDoesNotExistsError(this.findTableHumanName(tableName)));
 
       this.createdAtColumn = this.db.findCreatedAtColumn(this.tableName as string);
       this.updatedAtColumn = this.db.findUpdatedAtColumn(this.tableName as string);
@@ -113,15 +114,15 @@ export class BasicCrud {
   }
 
   public messageForTableDoesNotExistsError(tableName: string): string {
-    return `${this.findTableHumanName(tableName)} does-not-exists`;
+    return `${tableName} does-not-exists`;
   }
 
   public messageForInvalidMetadataError(key: string, tableName: string): string {
-    return `Column ${this.findColumnHumanName(key, tableName)} does-not-exists-on-table ${this.findTableHumanName(tableName)}`;
+    return `Column ${key} does-not-exists-on-table ${tableName}`;
   }
 
   public messageForConstraintError(tableName: string): string {
-    return `record-in-use-in-table: ${this.findTableHumanName(tableName)}`;
+    return `record-in-use-in-table: ${tableName}`;
   }
 
   public messageForInvalidDropdownConfigError(missingField: string): string {
@@ -129,24 +130,19 @@ export class BasicCrud {
   }
 
   public messageForMissingFieldError(columnName: string): string {
-    return `field-not-sent: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+    return `field-not-sent: ${columnName}`;
   }
 
   public messageForFieldSizeExcedeedError(columnName: string, maxSize: number): string {
-    return (
-      'fieldSizeExcedeed field: ' +
-      this.findColumnHumanName(columnName, this.tableName || '') +
-      ' maxSize: ' +
-      String(maxSize)
-    );
+    return `fieldSizeExcedeed field: ${columnName} maxSize: ${String(maxSize)}`;
   }
 
-  public messageForValueDoesNotExistsOnParentError(columnName: string, tableName: string): string {
-    return `valueDoesNotExistsOnParent value: ${this.findColumnHumanName(columnName, tableName)} ${this.findTableHumanName(tableName)}.`;
+  public messageForValueDoesNotExistsOnParentError(value: string, tableName: string): string {
+    return `valueDoesNotExistsOnParent value: ${value} column: ${tableName}.`;
   }
 
   public messageForValueAlreadyNotExistsOnParentError(value: string, columnName: string): string {
-    return `valueAlreadyExistsOnParent value: ${value} column: ${this.findColumnHumanName(columnName, this.tableName || '')}`;
+    return `valueAlreadyExistsOnParent value: ${value} column: ${columnName}`;
   }
 
   private findTableHumanName(tableName: string): string {
@@ -159,11 +155,11 @@ export class BasicCrud {
     return table.humanName;
   }
 
-  private findColumnHumanName(tableName: string, columnName: string): string {
-    if (!this.metadata) return tableName;
+  private findColumnHumanName(columnName: string, tableName?: string): string {
+    if (!this.metadata) return columnName;
 
-    const table = this.metadata.find(m => m.tableName === this.tableName);
-    if (!table || !table.columns || table.columns.length === 0) return tableName;
+    const table = this.metadata.find(m => m.tableName === tableName || this.tableName);
+    if (!table || !table.columns || table.columns.length === 0) return columnName;
 
     const column = table.columns.find(c => c.columnName === columnName);
     if (!column || !column.humanName) return columnName;
@@ -197,7 +193,11 @@ export class BasicCrud {
               [column] = this.schemaMetadata.columns.filter(col => col.columnName === key);
             }
 
-            if (!column) throw new InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
+            if (!column) {
+              throw new InvalidMetadataError(
+                this.messageForInvalidMetadataError(key, this.findTableHumanName(this.tableName || '')),
+              );
+            }
 
             if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
               fields.push(key);
@@ -246,6 +246,11 @@ export class BasicCrud {
         }
       }
     } catch (err: any) {
+      if (err.message.startsWith('Column') && err.message.endsWith('cannot be null')) {
+        const exceptionParts = err.message.split(' ');
+        throw new MissingFieldError(this.messageForMissingFieldError(this.findColumnHumanName(exceptionParts[1])));
+      }
+
       throw new DBError(err.message);
     }
   }
@@ -291,7 +296,9 @@ export class BasicCrud {
             }
 
             if (!column) {
-              throw new InvalidMetadataError(this.messageForInvalidMetadataError(key, this.tableName || ''));
+              throw new InvalidMetadataError(
+                this.messageForInvalidMetadataError(key, this.findTableHumanName(this.tableName || '')),
+              );
             }
 
             if ((!column.primaryKey || !column.autoIncrement) && data[key] !== undefined) {
@@ -383,7 +390,9 @@ export class BasicCrud {
                     options,
                   }))
                 ) {
-                  throw new ConstraintError(this.messageForConstraintError(cascadeTable.tableName));
+                  throw new ConstraintError(
+                    this.messageForConstraintError(this.findTableHumanName(cascadeTable.tableName)),
+                  );
                 }
               }
             }
@@ -426,7 +435,9 @@ export class BasicCrud {
 
         const casedTable = constraints.filter(c => c.tableName.toLowerCase() === table.toLowerCase());
         const resourcedTableName = casedTable && casedTable.length > 0 ? casedTable[0].tableName : table;
-        throw new ConstraintError(this.messageForConstraintError(resourcedTableName.tableName));
+        throw new ConstraintError(
+          this.messageForConstraintError(this.findTableHumanName(resourcedTableName.tableName)),
+        );
       }
 
       throw new DBError(err.message);
@@ -460,7 +471,9 @@ export class BasicCrud {
           })) as unknown;
 
           if (amount.amount > 0) {
-            throw new ConstraintError(this.messageForConstraintError(childCrud.schemaMetadata?.tableName || ''));
+            throw new ConstraintError(
+              this.messageForConstraintError(this.findTableHumanName(childCrud.schemaMetadata?.tableName || '')),
+            );
           }
         }
       }
@@ -892,7 +905,7 @@ export class BasicCrud {
       //         : column.defaultValue;
       //   }
       // } else if (column.primaryKey && operation !== Operation.UPDATE) {
-      throw new MissingFieldError(this.messageForMissingFieldError(column.columnName));
+      throw new MissingFieldError(this.messageForMissingFieldError(this.findColumnHumanName(column.columnName)));
     }
 
     // Verify the field size
@@ -901,7 +914,9 @@ export class BasicCrud {
       (column.dataType === 'char' || column.dataType === 'varchar') &&
       data[column.columnName].length > (column.length as number)
     ) {
-      throw new FieldSizeExcedeedError(this.messageForFieldSizeExcedeedError(column.columnName, column.length || 0));
+      throw new FieldSizeExcedeedError(
+        this.messageForFieldSizeExcedeedError(this.findColumnHumanName(column.columnName), column.length || 0),
+      );
     }
 
     // Verify parent constraint
@@ -916,7 +931,10 @@ export class BasicCrud {
 
       if (!exists || !exists.recordExists) {
         throw new ValueDoesNotExistsOnParentError(
-          this.messageForValueDoesNotExistsOnParentError(data[column.columnName], tableMetadata.tableName),
+          this.messageForValueDoesNotExistsOnParentError(
+            data[column.columnName],
+            this.findTableHumanName(tableMetadata.tableName),
+          ),
         );
       }
     }
@@ -937,7 +955,10 @@ export class BasicCrud {
 
       if (exists && exists.amount > 0) {
         throw new ValueAlreadyNotExistsOnParentError(
-          this.messageForValueAlreadyNotExistsOnParentError(data[column.columnName], column.columnName),
+          this.messageForValueAlreadyNotExistsOnParentError(
+            data[column.columnName],
+            this.findColumnHumanName(column.columnName),
+          ),
         );
       }
     }
