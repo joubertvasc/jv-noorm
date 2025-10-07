@@ -22,8 +22,8 @@ import { ConnectionPool } from './ConnectionPool';
 import { ICrudEvent } from './interfaces/ICrudEvent';
 import { IDeleteOptions } from './interfaces/IDeleteOptions';
 import { ILoggedUser } from './interfaces/ILoggedUser';
-import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 import { ISchemaMetaDataResultSet } from './interfaces/ISchemaMetaDataResultSet';
+import { ITableConstraintsResultSet } from './interfaces/ITableConstraintsResultSet';
 
 export abstract class BaseDB extends EventEmitter {
   private softDelete = false;
