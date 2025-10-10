@@ -87,6 +87,7 @@ export declare class BasicCrud {
     }): Promise<IListResult>;
     dropdownList(params: {
         filters?: Record<string, any>;
+        rawCondition?: string;
         orderBy?: string;
         orderDirection?: string;
         offset?: number;

@@ -690,6 +690,7 @@ export class BasicCrud {
 
   public async dropdownList(params: {
     filters?: Record<string, any>;
+    rawCondition?: string;
     orderBy?: string;
     orderDirection?: string;
     offset?: number;
@@ -720,6 +721,10 @@ export class BasicCrud {
           idx++;
         });
       });
+    }
+
+    if (params && params.rawCondition) {
+      conditions.push(params.rawCondition);
     }
 
     if (this.deletedAtColumn && params?.softDeleted === true) {

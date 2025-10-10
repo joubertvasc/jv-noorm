@@ -570,6 +570,9 @@ class BasicCrud {
                 });
             });
         }
+        if (params && params.rawCondition) {
+            conditions.push(params.rawCondition);
+        }
         if (this.deletedAtColumn && params?.softDeleted === true) {
             conditions.push(this.deletedAtColumn + ` IS NULL`);
         }
