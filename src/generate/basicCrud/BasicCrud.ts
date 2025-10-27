@@ -353,41 +353,41 @@ export class BasicCrud {
             if (!(await this.hanbleDeleteRestrictions(constraints, key))) {
               return false;
             }
+          }
 
-            // Do the soft delete
-            const deletedAtValue: any = {
-              date: new Date(),
-            };
+          // Do the soft delete
+          const deletedAtValue: any = {
+            date: new Date(),
+          };
 
-            if (options?.userId) deletedAtValue['userId'] = options.userId;
-            if (options?.userName) deletedAtValue['userName'] = options.userName;
+          if (options?.userId) deletedAtValue['userId'] = options.userId;
+          if (options?.userName) deletedAtValue['userName'] = options.userName;
 
-            primaryKeyInfo.values.unshift(JSON.stringify(deletedAtValue));
-            await this.db.update({
-              command: `UPDATE ${this.tableName}
+          primaryKeyInfo.values.unshift(JSON.stringify(deletedAtValue));
+          await this.db.update({
+            command: `UPDATE ${this.tableName}
                          SET ${this.deletedAtColumn} = ${this.isMariaDB ? '?' : '$1'}
                        WHERE ${primaryKeyInfo.cmd}`,
-              values: primaryKeyInfo.values,
-              transaction,
-            });
+            values: primaryKeyInfo.values,
+            transaction,
+          });
 
-            // Let's verify if there are cascade childs to delete too.
-            const cascade = constraints.filter(c => c.deleteRule === DeleteRule.CASCADE);
+          // Let's verify if there are cascade childs to delete too.
+          const cascade = constraints.filter(c => c.deleteRule === DeleteRule.CASCADE);
 
-            if (cascade && cascade.length > 0) {
-              for (const cascadeTable of cascade) {
-                if (
-                  !(await this.deleteRecursively({
-                    tableName: cascadeTable.tableName,
-                    key,
-                    transaction,
-                    options,
-                  }))
-                ) {
-                  throw new ConstraintError(
-                    this.messageForConstraintError(this.findTableHumanName(cascadeTable.tableName)),
-                  );
-                }
+          if (cascade && cascade.length > 0) {
+            for (const cascadeTable of cascade) {
+              if (
+                !(await this.deleteRecursively({
+                  tableName: cascadeTable.tableName,
+                  key,
+                  transaction,
+                  options,
+                }))
+              ) {
+                throw new ConstraintError(
+                  this.messageForConstraintError(this.findTableHumanName(cascadeTable.tableName)),
+                );
               }
             }
           }
