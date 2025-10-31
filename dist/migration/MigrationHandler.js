@@ -103,7 +103,7 @@ class MigrationHandler {
                     if (env_1.env.DB_TYPE === dbType_1.DBType.MariaDB) {
                         // eslint-disable-next-line @typescript-eslint/no-require-imports
                         require('child_process')
-                            .execSync(`mysql -u${env_1.env.DB_USER} -p${env_1.env.DB_PASSWORD} -h${env_1.env.DB_HOST} -D${env_1.env.DB_DATABASE} < ${folder}/${file}`)
+                            .execSync(`mariadb -u${env_1.env.DB_USER} -p${env_1.env.DB_PASSWORD} -h${env_1.env.DB_HOST} -D${env_1.env.DB_DATABASE} < ${folder}/${file}`)
                             .toString()
                             .replace('\n', '');
                     }

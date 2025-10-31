@@ -111,7 +111,7 @@ export class MigrationHandler {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             require('child_process')
               .execSync(
-                `mysql -u${env.DB_USER} -p${env.DB_PASSWORD} -h${env.DB_HOST} -D${env.DB_DATABASE} < ${folder}/${file}`,
+                `mariadb -u${env.DB_USER} -p${env.DB_PASSWORD} -h${env.DB_HOST} -D${env.DB_DATABASE} < ${folder}/${file}`,
               )
               .toString()
               .replace('\n', '');
