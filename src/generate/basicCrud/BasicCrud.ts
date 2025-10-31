@@ -7,6 +7,7 @@
  */
 
 import { isArray } from 'lodash';
+import { Server } from 'socket.io';
 
 import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../../db/ConnectionPool';
@@ -51,6 +52,7 @@ export class BasicCrud {
   public keyField: string | undefined;
   public listField: string | undefined;
   private metadata: IMetadata[] | undefined;
+  private socket: Server | undefined;
 
   public constructor(params: {
     tableName: string;
@@ -59,6 +61,7 @@ export class BasicCrud {
     listField?: string;
     softDelete?: boolean;
     metadata?: IMetadata[];
+    socket?: Server;
   }) {
     const { tableName, db, keyField, listField, softDelete, metadata } = params;
 
@@ -68,6 +71,7 @@ export class BasicCrud {
     this.isPostgreSQL = env.DB_TYPE === DBType.PostgreSQL;
     this.db.setSoftDelete(softDelete === true ? true : false);
     this.metadata = metadata;
+    this.socket = params.socket;
 
     try {
       if (!db.getMetadata()) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
@@ -235,6 +239,10 @@ export class BasicCrud {
             await this.hookAfterCreate({ data, transaction });
             await this.hookAfterSave({ data, transaction });
 
+            if (this.socket) {
+              this.socket.emit(`${this.tableName}/created`, data);
+            }
+
             return data;
           }
         }
@@ -323,6 +331,10 @@ export class BasicCrud {
             await this.hookAfterUpdate({ key, data, transaction });
             await this.hookAfterSave({ data, transaction });
 
+            if (this.socket) {
+              this.socket.emit(`${this.tableName}/updated`, data);
+            }
+
             return data;
           }
         }
@@ -396,6 +408,10 @@ export class BasicCrud {
         }
       } else {
         await this.handleHardDelete(constraints, primaryKeyInfo, transaction);
+      }
+
+      if (this.socket) {
+        this.socket.emit(`${this.tableName}/deleted`, key);
       }
 
       return await this.hookAfterDelete({ key, transaction });

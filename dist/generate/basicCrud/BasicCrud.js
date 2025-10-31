@@ -37,6 +37,7 @@ class BasicCrud {
     keyField;
     listField;
     metadata;
+    socket;
     constructor(params) {
         const { tableName, db, keyField, listField, softDelete, metadata } = params;
         this.tableName = tableName;
@@ -45,6 +46,7 @@ class BasicCrud {
         this.isPostgreSQL = env_1.env.DB_TYPE === dbType_1.DBType.PostgreSQL;
         this.db.setSoftDelete(softDelete === true ? true : false);
         this.metadata = metadata;
+        this.socket = params.socket;
         try {
             if (!db.getMetadata())
                 throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
@@ -178,6 +180,9 @@ class BasicCrud {
                         }
                         await this.hookAfterCreate({ data, transaction });
                         await this.hookAfterSave({ data, transaction });
+                        if (this.socket) {
+                            this.socket.emit(`${this.tableName}/created`, data);
+                        }
                         return data;
                     }
                 }
@@ -251,6 +256,9 @@ class BasicCrud {
                         data = await this.get({ key, transaction });
                         await this.hookAfterUpdate({ key, data, transaction });
                         await this.hookAfterSave({ data, transaction });
+                        if (this.socket) {
+                            this.socket.emit(`${this.tableName}/updated`, data);
+                        }
                         return data;
                     }
                 }
@@ -318,6 +326,9 @@ class BasicCrud {
             }
             else {
                 await this.handleHardDelete(constraints, primaryKeyInfo, transaction);
+            }
+            if (this.socket) {
+                this.socket.emit(`${this.tableName}/deleted`, key);
             }
             return await this.hookAfterDelete({ key, transaction });
         }

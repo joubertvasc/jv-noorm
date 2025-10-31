@@ -5,6 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import { Server } from 'socket.io';
 import { BaseDB } from '../../db/BaseDB';
 import { ConnectionPool } from '../../db/ConnectionPool';
 import { IColumnMetaDataResultSet } from '../../db/interfaces/IColumnMetaDataResultSet';
@@ -30,6 +31,7 @@ export declare class BasicCrud {
     keyField: string | undefined;
     listField: string | undefined;
     private metadata;
+    private socket;
     constructor(params: {
         tableName: string;
         db: BaseDB;
@@ -37,6 +39,7 @@ export declare class BasicCrud {
         listField?: string;
         softDelete?: boolean;
         metadata?: IMetadata[];
+        socket?: Server;
     });
     messageForDBNotConnectedError(): string;
     messageForDBMetadataNotLoadedError(): string;
