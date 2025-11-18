@@ -99,8 +99,12 @@ export const generate = async (): Promise<void> => {
         if (tableName && table.tableName !== tableName) continue;
 
         let interfaceFile = `export interface ${interfaceName} {\n`;
+        const columns: string[] = [];
         for (const column of table.columns) {
-          interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+          if (!columns.includes(column.columnName)) {
+            interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+            columns.push(column.columnName);
+          }
         }
 
         interfaceFile += '}';

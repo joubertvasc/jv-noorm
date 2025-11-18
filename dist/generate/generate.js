@@ -95,8 +95,12 @@ const generate = async () => {
                 if (tableName && table.tableName !== tableName)
                     continue;
                 let interfaceFile = `export interface ${interfaceName} {\n`;
+                const columns = [];
                 for (const column of table.columns) {
-                    interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+                    if (!columns.includes(column.columnName)) {
+                        interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+                        columns.push(column.columnName);
+                    }
                 }
                 interfaceFile += '}';
                 if (fs_1.default.existsSync(filename))
