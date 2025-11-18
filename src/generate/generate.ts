@@ -102,7 +102,7 @@ export const generate = async (): Promise<void> => {
         const columns: string[] = [];
         for (const column of table.columns) {
           if (!columns.includes(column.columnName)) {
-            interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+            interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)};\n`;
             columns.push(column.columnName);
           }
         }

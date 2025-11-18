@@ -98,7 +98,7 @@ const generate = async () => {
                 const columns = [];
                 for (const column of table.columns) {
                     if (!columns.includes(column.columnName)) {
-                        interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)},\n`;
+                        interfaceFile += `  ${column.columnName}${column.isNullable ? '?' : ''}: ${findCorrectType(column.dataType)};\n`;
                         columns.push(column.columnName);
                     }
                 }
