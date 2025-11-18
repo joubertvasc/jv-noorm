@@ -107,7 +107,7 @@ export const generate = async (): Promise<void> => {
           }
         }
 
-        interfaceFile += '}';
+        interfaceFile += '}\n';
 
         if (fs.existsSync(filename)) fs.unlinkSync(filename);
         fs.writeFileSync(filename, interfaceFile);

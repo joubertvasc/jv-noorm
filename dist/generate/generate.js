@@ -102,7 +102,7 @@ const generate = async () => {
                         columns.push(column.columnName);
                     }
                 }
-                interfaceFile += '}';
+                interfaceFile += '}\n';
                 if (fs_1.default.existsSync(filename))
                     fs_1.default.unlinkSync(filename);
                 fs_1.default.writeFileSync(filename, interfaceFile);
