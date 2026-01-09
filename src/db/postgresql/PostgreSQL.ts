@@ -107,13 +107,13 @@ export class PostgreSQL extends BaseDB {
               }
             : result.rows;
 
-      this.emitCrudEvent(args.verboseHeader, {
-        command: args.command,
-        values: args.values,
-        inTransaction: !!args.transaction,
-        result: response,
-        user: this.getLoggedUser(),
-      });
+      // this.emitCrudEvent(args.verboseHeader, {
+      //   command: args.command,
+      //   values: args.values,
+      //   inTransaction: !!args.transaction,
+      //   result: response,
+      //   user: this.getLoggedUser(),
+      // });
 
       return response;
     } finally {
