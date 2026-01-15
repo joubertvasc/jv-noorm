@@ -214,7 +214,7 @@ export class BasicCrud {
               return column.primaryKey;
             });
 
-            const hasUUID = primaryKey && primaryKey.length === 1 && primaryKey[0].columnType.toLowerCase() === 'uuid';
+            const hasUUID = primaryKey?.length === 1 && this.getColumnType(primaryKey[0]) === 'uuid';
             const primaryKeyField = primaryKey && primaryKey.length === 1 && primaryKey[0].columnName;
 
             if (this.createdAtColumn) {
@@ -979,5 +979,9 @@ export class BasicCrud {
     }
 
     return true;
+  }
+
+  private getColumnType(column: { [key: string]: any }): string | null {
+    return (column.columnType || column.dataType || column.udtName || column.type || null)?.toLowerCase() ?? null;
   }
 }
