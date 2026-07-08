@@ -135,6 +135,7 @@ export declare class BasicCrud {
     verifyRow(key: any, softDeleted?: boolean): Promise<boolean>;
     mountTableWherePrimaryKey(key: any, softDeleted?: boolean): IPrimaryKeyQuery;
     getTablePrimaryKey(): string | string[];
-    verifyDataFields(data: object, operation: Operation, primaryKey?: number): Promise<boolean>;
-    verifyField(column: IColumnMetaDataResultSet, tableMetadata: ISchemaMetaDataResultSet, data: Record<string, any>, operation: Operation, primaryKey?: number): Promise<boolean>;
+    verifyDataFields(data: object, operation: Operation, primaryKey?: number, transaction?: ConnectionPool): Promise<boolean>;
+    verifyField(column: IColumnMetaDataResultSet, tableMetadata: ISchemaMetaDataResultSet, data: Record<string, any>, operation: Operation, primaryKey?: number, transaction?: ConnectionPool): Promise<boolean>;
+    private getColumnType;
 }

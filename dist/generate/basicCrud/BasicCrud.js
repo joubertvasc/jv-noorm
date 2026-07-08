@@ -130,7 +130,7 @@ class BasicCrud {
             throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
         if (!this.schemaMetadata)
             throw new db_metadata_not_loaded_1.DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
-        await this.verifyDataFields(data, operations_1.Operation.CREATE);
+        await this.verifyDataFields(data, operations_1.Operation.CREATE, undefined, transaction);
         try {
             data = await this.hookBeforeCreate({ data, transaction });
             if (data) {
@@ -162,7 +162,7 @@ class BasicCrud {
                         const primaryKey = this.schemaMetadata.columns.filter(column => {
                             return column.primaryKey;
                         });
-                        const hasUUID = primaryKey && primaryKey.length === 1 && primaryKey[0].columnType.toLowerCase() === 'uuid';
+                        const hasUUID = primaryKey?.length === 1 && this.getColumnType(primaryKey[0]) === 'uuid';
                         const primaryKeyField = primaryKey && primaryKey.length === 1 && primaryKey[0].columnName;
                         if (this.createdAtColumn) {
                             if (!fields.includes(this.createdAtColumn)) {
@@ -686,7 +686,7 @@ class BasicCrud {
         return keys.length === 1 ? keys[0] : keys;
     }
     // Can be overrided for more controls
-    async verifyDataFields(data, operation, primaryKey) {
+    async verifyDataFields(data, operation, primaryKey, transaction) {
         if (!this.db)
             throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
         if (!this.schemaMetadata)
@@ -694,7 +694,7 @@ class BasicCrud {
         this.schemaMetadata.columns = this.schemaMetadata.columns;
         for (const column of this.schemaMetadata.columns) {
             try {
-                await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey);
+                await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey, transaction);
             }
             catch (err) {
                 throw new db_error_1.DBError(err.message);
@@ -702,7 +702,7 @@ class BasicCrud {
         }
         return true;
     }
-    async verifyField(column, tableMetadata, data, operation, primaryKey) {
+    async verifyField(column, tableMetadata, data, operation, primaryKey, transaction) {
         // Verify if the field is not nullable. If it's not, verify for a default value
         if (!this.db)
             throw new db_not_connected_error_1.DBNotConnectedError(this.messageForDBNotConnectedError());
@@ -732,6 +732,7 @@ class BasicCrud {
                WHERE ${column.referencedColumn} = ?
                  AND ${this.deletedAtColumn} IS NULL`,
                 values: [data[column.columnName]],
+                transaction
             });
             if (!exists || !exists.recordExists) {
                 throw new value_does_not_exists_on_parent_error_1.ValueDoesNotExistsOnParentError(this.messageForValueDoesNotExistsOnParentError(data[column.columnName], this.findTableHumanName(tableMetadata.tableName)));
@@ -749,12 +750,16 @@ class BasicCrud {
                 ${primaryKey ? ` AND id <> ?` : ''}
                 AND ${this.deletedAtColumn} IS NULL`,
                 values: uniqueKeyVerificationParams,
+                transaction
             });
             if (exists && exists.amount > 0) {
                 throw new value_already_exists_on_parent_error_1.ValueAlreadyExistsOnParentError(this.messageForValueAlreadyExistsOnParentError(data[column.columnName], this.findColumnHumanName(column.columnName)));
             }
         }
         return true;
+    }
+    getColumnType(column) {
+        return (column.columnType || column.dataType || column.udtName || column.type || null)?.toLowerCase() ?? null;
     }
 }
 exports.BasicCrud = BasicCrud;

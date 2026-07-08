@@ -172,7 +172,7 @@ export class BasicCrud {
     if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
     if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
-    await this.verifyDataFields(data, Operation.CREATE);
+    await this.verifyDataFields(data, Operation.CREATE, undefined, transaction);
 
     try {
       data = await this.hookBeforeCreate({ data, transaction });
@@ -214,7 +214,7 @@ export class BasicCrud {
               return column.primaryKey;
             });
 
-            const hasUUID = primaryKey && primaryKey.length === 1 && primaryKey[0].columnType.toLowerCase() === 'uuid';
+            const hasUUID = primaryKey?.length === 1 && this.getColumnType(primaryKey[0]) === 'uuid';
             const primaryKeyField = primaryKey && primaryKey.length === 1 && primaryKey[0].columnName;
 
             if (this.createdAtColumn) {
@@ -884,7 +884,7 @@ export class BasicCrud {
   }
 
   // Can be overrided for more controls
-  public async verifyDataFields(data: object, operation: Operation, primaryKey?: number): Promise<boolean> {
+  public async verifyDataFields(data: object, operation: Operation, primaryKey?: number, transaction?: ConnectionPool): Promise<boolean> {
     if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
     if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
@@ -892,7 +892,7 @@ export class BasicCrud {
 
     for (const column of this.schemaMetadata.columns) {
       try {
-        await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey);
+        await this.verifyField(column, this.schemaMetadata, data, operation, primaryKey, transaction);
       } catch (err: any) {
         throw new DBError(err.message);
       }
@@ -907,6 +907,7 @@ export class BasicCrud {
     data: Record<string, any>,
     operation: Operation,
     primaryKey?: number,
+    transaction?: ConnectionPool
   ): Promise<boolean> {
     // Verify if the field is not nullable. If it's not, verify for a default value
     if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
@@ -942,6 +943,7 @@ export class BasicCrud {
                WHERE ${column.referencedColumn} = ?
                  AND ${this.deletedAtColumn} IS NULL`,
         values: [data[column.columnName]],
+        transaction
       });
 
       if (!exists || !exists.recordExists) {
@@ -966,6 +968,7 @@ export class BasicCrud {
                 ${primaryKey ? ` AND id <> ?` : ''}
                 AND ${this.deletedAtColumn} IS NULL`,
         values: uniqueKeyVerificationParams,
+        transaction
       });
 
       if (exists && exists.amount > 0) {
@@ -979,5 +982,9 @@ export class BasicCrud {
     }
 
     return true;
+  }
+
+  private getColumnType(column: { [key: string]: any }): string | null {
+    return (column.columnType || column.dataType || column.udtName || column.type || null)?.toLowerCase() ?? null;
   }
 }

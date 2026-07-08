@@ -338,44 +338,92 @@ export default class MariaDB extends BaseDB {
 
   protected async getDBMetadata(transaction?: ConnectionPool): Promise<ISchemaMetaDataResultSet[]> {
     try {
+      // const tables = await this.queryRows({
+      //   sql: `
+      //   SELECT T.TABLE_NAME AS tableName, T.TABLE_TYPE AS tableType, T.Engine AS engine,
+      //          T.TABLE_COLLATION AS tableCollation,
+      //          COALESCE((SELECT CONCAT ('[',
+      //                             GROUP_CONCAT(JSON_OBJECT("columnName", C.COLUMN_NAME,
+      //                                                      "ordinalPosition" , C.ORDINAL_POSITION,
+      //                                                      "defaultValue", C.COLUMN_DEFAULT,
+      //                                                      "isNullable", CASE WHEN C.IS_NULLABLE = 'YES' THEN true ELSE false END,
+      //                                                      "dataType", C.DATA_TYPE,
+      //                                                      "columnType", C.COLUMN_TYPE,
+      //                                                      "length", C.CHARACTER_MAXIMUM_LENGTH,
+      //                                                      "precision", C.NUMERIC_PRECISION,
+      //                                                      "decimals", C.NUMERIC_SCALE,
+      //                                                      "collation", C.COLLATION_NAME,
+      //                                                      "primaryKey", CASE WHEN C.COLUMN_KEY = "PRI" THEN true ELSE false END,
+      //                                                      "uniqueKey", CASE WHEN C.COLUMN_KEY = "UNI" THEN true ELSE false END,
+      //                                                      "foreignKey", CASE WHEN C.COLUMN_KEY = "MUL" THEN true ELSE false END,
+      //                                                      "autoIncrement", CASE WHEN C.EXTRA = "auto_increment" THEN true ELSE false END,
+      //                                                      "constraintName", K.CONSTRAINT_NAME,
+      //                                                      "referencedTable", K.REFERENCED_TABLE_NAME,
+      //                                                      "referencedColumn", K.REFERENCED_COLUMN_NAME,
+      //                                                      "updateRule", R.UPDATE_RULE,
+      //                                                      "deleteRule", R.DELETE_RULE
+      //                                                     ) ORDER BY C.ORDINAL_POSITION), ']')
+      //                      FROM information_schema.COLUMNS C
+      //                      LEFT OUTER JOIN information_schema.KEY_COLUMN_USAGE K ON K.TABLE_NAME = C.TABLE_NAME AND
+      //                                                                               K.COLUMN_NAME = C.COLUMN_NAME AND
+      //                                                                               K.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA AND
+      //                                                                               K.CONSTRAINT_NAME <> 'PRIMARY'
+      //                      LEFT OUTER JOIN information_schema.REFERENTIAL_CONSTRAINTS R ON R.CONSTRAINT_NAME = K.CONSTRAINT_NAME AND
+      //                                                                                      R.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA
+      //                     WHERE C.TABLE_NAME = T.TABLE_NAME
+      //                       AND C.TABLE_SCHEMA = T.TABLE_SCHEMA), '[]') AS columns
+      //     FROM information_schema.TABLES T
+      //    WHERE T.TABLE_SCHEMA = ?
+      //    ORDER BY T.TABLE_NAME`,
+      //   values: [env.DB_DATABASE],
+      //   transaction,
+      // });
+
       const tables = await this.queryRows({
         sql: `
-        SELECT T.TABLE_NAME AS tableName, T.TABLE_TYPE AS tableType, T.Engine AS engine, 
-               T.TABLE_COLLATION AS tableCollation, 
-               COALESCE((SELECT CONCAT ('[', 
-                                  GROUP_CONCAT(JSON_OBJECT("columnName", C.COLUMN_NAME,
-                                                           "ordinalPosition" , C.ORDINAL_POSITION,
-                                                           "defaultValue", C.COLUMN_DEFAULT,
-                                                           "isNullable", CASE WHEN C.IS_NULLABLE = 'YES' THEN true ELSE false END,
-                                                           "dataType", C.DATA_TYPE,
-                                                           "columnType", C.COLUMN_TYPE,
-                                                           "length", C.CHARACTER_MAXIMUM_LENGTH,
-                                                           "precision", C.NUMERIC_PRECISION,
-                                                           "decimals", C.NUMERIC_SCALE,
-                                                           "collation", C.COLLATION_NAME,
-                                                           "primaryKey", CASE WHEN C.COLUMN_KEY = "PRI" THEN true ELSE false END,
-                                                           "uniqueKey", CASE WHEN C.COLUMN_KEY = "UNI" THEN true ELSE false END,
-                                                           "foreignKey", CASE WHEN C.COLUMN_KEY = "MUL" THEN true ELSE false END,
-                                                           "autoIncrement", CASE WHEN C.EXTRA = "auto_increment" THEN true ELSE false END,
-                                                           "constraintName", K.CONSTRAINT_NAME,
-                                                           "referencedTable", K.REFERENCED_TABLE_NAME,
-                                                           "referencedColumn", K.REFERENCED_COLUMN_NAME,
-                                                           "updateRule", R.UPDATE_RULE,
-                                                           "deleteRule", R.DELETE_RULE
-                                                          ) ORDER BY C.ORDINAL_POSITION), ']')
-                           FROM information_schema.COLUMNS C 
-                           LEFT OUTER JOIN information_schema.KEY_COLUMN_USAGE K ON K.TABLE_NAME = C.TABLE_NAME AND 
-                                                                                    K.COLUMN_NAME = C.COLUMN_NAME AND
-                                                                                    K.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA AND
-                                                                                    K.CONSTRAINT_NAME <> 'PRIMARY'
-                           LEFT OUTER JOIN information_schema.REFERENTIAL_CONSTRAINTS R ON R.CONSTRAINT_NAME = K.CONSTRAINT_NAME AND 
-                                                                                           R.CONSTRAINT_SCHEMA = C.TABLE_SCHEMA
-                          WHERE C.TABLE_NAME = T.TABLE_NAME
-                            AND C.TABLE_SCHEMA = T.TABLE_SCHEMA), '[]') AS columns
+         SELECT T.TABLE_NAME AS tableName,
+                T.TABLE_TYPE AS tableType,
+                T.Engine AS engine,
+                T.TABLE_COLLATION AS tableCollation,
+                COALESCE(CONCAT('[', 
+                                GROUP_CONCAT(cols.col_json ORDER BY cols.ordinal_position SEPARATOR ','), ']'),
+                                '[]') AS columns
           FROM information_schema.TABLES T
+          LEFT JOIN (
+              SELECT C.TABLE_NAME,
+                     C.ORDINAL_POSITION AS ordinal_position,
+                     JSON_OBJECT(
+                       'columnName', C.COLUMN_NAME,
+                       'ordinalPosition', C.ORDINAL_POSITION,
+                       'defaultValue', C.COLUMN_DEFAULT,
+                       'isNullable', CASE WHEN C.IS_NULLABLE = 'YES' THEN true ELSE false END,
+                       'dataType', C.DATA_TYPE,
+                       'columnType', C.COLUMN_TYPE,
+                       'length', C.CHARACTER_MAXIMUM_LENGTH,
+                       'precision', C.NUMERIC_PRECISION,
+                       'decimals', C.NUMERIC_SCALE,
+                       'collation', C.COLLATION_NAME,
+                       'primaryKey', CASE WHEN C.COLUMN_KEY = 'PRI' THEN true ELSE false END,
+                       'uniqueKey', CASE WHEN C.COLUMN_KEY = 'UNI' THEN true ELSE false END,
+                       'foreignKey', CASE WHEN C.COLUMN_KEY = 'MUL' THEN true ELSE false END,
+                       'autoIncrement', CASE WHEN C.EXTRA = 'auto_increment' THEN true ELSE false END,
+                       'constraintName', K.CONSTRAINT_NAME,
+                       'referencedTable', K.REFERENCED_TABLE_NAME,
+                       'referencedColumn', K.REFERENCED_COLUMN_NAME,
+                       'updateRule', R.UPDATE_RULE,
+                       'deleteRule', R.DELETE_RULE) AS col_json
+                FROM information_schema.COLUMNS C
+                LEFT JOIN information_schema.KEY_COLUMN_USAGE K ON K.TABLE_SCHEMA = C.TABLE_SCHEMA AND 
+                                                                   K.TABLE_NAME = C.TABLE_NAME AND 
+                                                                   K.COLUMN_NAME = C.COLUMN_NAME AND 
+                                                                   K.CONSTRAINT_NAME <> 'PRIMARY'
+                LEFT JOIN information_schema.REFERENTIAL_CONSTRAINTS R ON R.CONSTRAINT_SCHEMA = K.CONSTRAINT_SCHEMA AND 
+                                                                          R.CONSTRAINT_NAME = K.CONSTRAINT_NAME
+               WHERE C.TABLE_SCHEMA = ?) cols ON cols.TABLE_NAME = T.TABLE_NAME
          WHERE T.TABLE_SCHEMA = ?
+         GROUP BY T.TABLE_NAME, T.TABLE_TYPE, T.Engine, T.TABLE_COLLATION
          ORDER BY T.TABLE_NAME`,
-        values: [env.DB_DATABASE],
+        values: [env.DB_DATABASE, env.DB_DATABASE],
         transaction,
       });
 
