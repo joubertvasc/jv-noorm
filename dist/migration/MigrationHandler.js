@@ -112,7 +112,12 @@ class MigrationHandler {
                         require('child_process').execSync(`export PGPASSWORD="${env_1.env.DB_PASSWORD}"`).toString().replace('\n', '');
                         // eslint-disable-next-line @typescript-eslint/no-require-imports
                         require('child_process')
-                            .execSync(`psql -h ${env_1.env.DB_HOST} -d ${env_1.env.DB_DATABASE} -U ${env_1.env.DB_USER} -p ${env_1.env.DB_PORT} -w -f '${folder}/${file}'`)
+                            .execSync(`psql -h ${env_1.env.DB_HOST} -d ${env_1.env.DB_DATABASE} -U ${env_1.env.DB_USER} -p ${env_1.env.DB_PORT} -w -f '${folder}/${file}'`, {
+                            env: {
+                                PGPASSWORD: env_1.env.DB_PASSWORD,
+                            },
+                            stdio: 'inherit',
+                        })
                             .toString()
                             .replace('\n', '');
                     }

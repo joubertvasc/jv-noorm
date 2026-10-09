@@ -122,6 +122,12 @@ export class MigrationHandler {
             require('child_process')
               .execSync(
                 `psql -h ${env.DB_HOST} -d ${env.DB_DATABASE} -U ${env.DB_USER} -p ${env.DB_PORT} -w -f '${folder}/${file}'`,
+                {
+                  env: {
+                    PGPASSWORD: env.DB_PASSWORD,
+                  },
+                  stdio: 'inherit',
+                },
               )
               .toString()
               .replace('\n', '');

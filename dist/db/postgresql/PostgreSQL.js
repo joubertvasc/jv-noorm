@@ -105,7 +105,7 @@ class PostgreSQL extends BaseDB_1.BaseDB {
             verboseHeader: 'QUERYROW',
             transaction: args.transaction,
         });
-        return result.length > 0 ? result[0] : [];
+        return result.length > 0 ? result[0] : null;
     }
     async queryRows(args) {
         const result = await this.query({
