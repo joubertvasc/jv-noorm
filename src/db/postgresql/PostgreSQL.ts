@@ -132,7 +132,7 @@ export class PostgreSQL extends BaseDB {
       transaction: args.transaction,
     });
 
-    return result.length > 0 ? result[0] : [];
+    return result.length > 0 ? result[0] : null;
   }
 
   public async queryRows(args: { sql: string; values?: any; transaction?: ConnectionPool }): Promise<any[] | null> {
