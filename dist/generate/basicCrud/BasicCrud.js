@@ -374,7 +374,7 @@ class BasicCrud {
                 if (referencedColumns && referencedColumns.length > 0) {
                     let where = `WHERE ${this.deletedAtColumn} IS NULL\n`;
                     referencedColumns.forEach(column => {
-                        where += `AND ${column.columnName} = ?\n`;
+                        where += `AND ${column.columnName} = ${this.isMariaDB ? '?' : '$1'}\n`;
                     });
                     const amount = (await this.db.queryRow({
                         sql: `SELECT COUNT(*) AS amount FROM ${restrictTable.tableName} ${where}`,
@@ -543,7 +543,7 @@ class BasicCrud {
                 params.offset = (params.page - 1) * params.limit;
             }
             sql += ` ORDER BY ${params.orderBy} ${params.orderDirection || ' ASC'} 
-      ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? ', ' : ''}${params.limit || ''}` : ''}`;
+      ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? (this.isMariaDB ? ', ' : ' OFFSET ') : ''}${params.limit || ''}` : ''}`;
         }
         const rows = await this.db.queryRows({
             sql: sql.replace('%%PROJECTION%%', projection),
@@ -661,7 +661,7 @@ class BasicCrud {
             values.push(key);
         }
         else {
-            for (let column = 0; column <= primaryKey.length; column++) {
+            for (let column = 0; column < primaryKey.length; column++) {
                 cmd += `${primaryKey[column]} = ${this.isMariaDB ? '?' : `$${column + 1}`}${column < primaryKey.length - 1 ? ' AND ' : ''}`;
                 values.push(key[column]);
             }
@@ -729,10 +729,10 @@ class BasicCrud {
             const exists = await this.db.queryRow({
                 sql: `SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS recordExists
                 FROM ${column.referencedTable}
-               WHERE ${column.referencedColumn} = ?
+               WHERE ${column.referencedColumn} = ${this.isMariaDB ? '?' : '$1'}
                  AND ${this.deletedAtColumn} IS NULL`,
                 values: [data[column.columnName]],
-                transaction
+                transaction,
             });
             if (!exists || !exists.recordExists) {
                 throw new value_does_not_exists_on_parent_error_1.ValueDoesNotExistsOnParentError(this.messageForValueDoesNotExistsOnParentError(data[column.columnName], this.findTableHumanName(tableMetadata.tableName)));
@@ -747,10 +747,10 @@ class BasicCrud {
                 sql: `SELECT COUNT(*) AS amount
                 FROM ${this.tableName}
                WHERE ${column.columnName} = ?
-                ${primaryKey ? ` AND id <> ?` : ''}
+                ${primaryKey ? ` AND id <> ${this.isMariaDB ? '?' : `$1`}` : ''}
                 AND ${this.deletedAtColumn} IS NULL`,
                 values: uniqueKeyVerificationParams,
-                transaction
+                transaction,
             });
             if (exists && exists.amount > 0) {
                 throw new value_already_exists_on_parent_error_1.ValueAlreadyExistsOnParentError(this.messageForValueAlreadyExistsOnParentError(data[column.columnName], this.findColumnHumanName(column.columnName)));

@@ -472,7 +472,7 @@ export class BasicCrud {
           let where = `WHERE ${this.deletedAtColumn} IS NULL\n`;
 
           referencedColumns.forEach(column => {
-            where += `AND ${column.columnName} = ?\n`;
+            where += `AND ${column.columnName} = ${this.isMariaDB ? '?' : '$1'}\n`;
           });
 
           const amount: any = (await this.db.queryRow({
@@ -689,7 +689,7 @@ export class BasicCrud {
       }
 
       sql += ` ORDER BY ${params.orderBy} ${params.orderDirection || ' ASC'} 
-      ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? ', ' : ''}${params.limit || ''}` : ''}`;
+      ${params.limit ? ` LIMIT ${params.offset || ''}${params.offset ? (this.isMariaDB ? ', ' : ' OFFSET ') : ''}${params.limit || ''}` : ''}`;
     }
 
     const rows = await this.db.queryRows({
@@ -855,7 +855,7 @@ export class BasicCrud {
       cmd = `${primaryKey} =  ${this.isMariaDB ? '?' : `$1`}`;
       values.push(key);
     } else {
-      for (let column = 0; column <= primaryKey.length; column++) {
+      for (let column = 0; column < primaryKey.length; column++) {
         cmd += `${primaryKey[column]} = ${this.isMariaDB ? '?' : `$${column + 1}`}${column < primaryKey.length - 1 ? ' AND ' : ''}`;
         values.push(key[column]);
       }
@@ -884,7 +884,12 @@ export class BasicCrud {
   }
 
   // Can be overrided for more controls
-  public async verifyDataFields(data: object, operation: Operation, primaryKey?: number, transaction?: ConnectionPool): Promise<boolean> {
+  public async verifyDataFields(
+    data: object,
+    operation: Operation,
+    primaryKey?: number,
+    transaction?: ConnectionPool,
+  ): Promise<boolean> {
     if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
     if (!this.schemaMetadata) throw new DBMetadataNotLoadedError(this.messageForDBMetadataNotLoadedError());
 
@@ -907,7 +912,7 @@ export class BasicCrud {
     data: Record<string, any>,
     operation: Operation,
     primaryKey?: number,
-    transaction?: ConnectionPool
+    transaction?: ConnectionPool,
   ): Promise<boolean> {
     // Verify if the field is not nullable. If it's not, verify for a default value
     if (!this.db) throw new DBNotConnectedError(this.messageForDBNotConnectedError());
@@ -940,10 +945,10 @@ export class BasicCrud {
       const exists = await this.db.queryRow({
         sql: `SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS recordExists
                 FROM ${column.referencedTable}
-               WHERE ${column.referencedColumn} = ?
+               WHERE ${column.referencedColumn} = ${this.isMariaDB ? '?' : '$1'}
                  AND ${this.deletedAtColumn} IS NULL`,
         values: [data[column.columnName]],
-        transaction
+        transaction,
       });
 
       if (!exists || !exists.recordExists) {
@@ -965,10 +970,10 @@ export class BasicCrud {
         sql: `SELECT COUNT(*) AS amount
                 FROM ${this.tableName}
                WHERE ${column.columnName} = ?
-                ${primaryKey ? ` AND id <> ?` : ''}
+                ${primaryKey ? ` AND id <> ${this.isMariaDB ? '?' : `$1`}` : ''}
                 AND ${this.deletedAtColumn} IS NULL`,
         values: uniqueKeyVerificationParams,
-        transaction
+        transaction,
       });
 
       if (exists && exists.amount > 0) {

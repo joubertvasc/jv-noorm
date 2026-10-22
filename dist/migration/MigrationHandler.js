@@ -126,15 +126,16 @@ class MigrationHandler {
                     }
                     if (env_1.env.DB_VERBOSE)
                         console.log('scriptExecuted', file);
-                    await db.insert({ command: 'INSERT INTO migrations (executedScript) VALUES (?)', values: [file] });
+                    await db.insert({
+                        command: `INSERT INTO migrations (executedScript) VALUES (${env_1.env.DB_TYPE === dbType_1.DBType.MariaDB ? '?' : '$1'})`,
+                        values: [file],
+                    });
                 }
                 catch (err) {
-                    if (env_1.env.DB_VERBOSE) {
-                        console.log('scriptFailed', file);
-                        console.log('commandExitStatus', err.status);
-                        console.log('commandErrorMessage', err.message);
-                        throw new db_error_1.DBError('impossibleToUpdateDB');
-                    }
+                    console.log('scriptFailed', file);
+                    console.log('commandExitStatus', err.status);
+                    console.log('commandErrorMessage', err.message);
+                    throw new db_error_1.DBError('impossibleToUpdateDB');
                 }
             }
         }
